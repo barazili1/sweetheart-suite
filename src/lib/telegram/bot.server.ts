@@ -257,6 +257,8 @@ const T = {
     hint: `Send /start to begin.`,
     needJoin: "Join the channel first ❗",
     needJoinMsg: `⚠️ <b>Channel membership required</b>\n${RULE}\nYou must join our official channel before verification.\n\n${DOT} Tap <b>Join the channel</b>\n${DOT} Then tap <b>Verify now</b> again.`,
+    membershipUnavailable: "Membership check is temporarily unavailable",
+    membershipUnavailableMsg: `⚠️ <b>Membership check unavailable</b>\n${RULE}\nThe bot needs to be an administrator in the official channel to verify members.\n\n<i>Please contact support and try again shortly.</i>`,
   },
   ar: {
     platform: `${head("اختر المنصة", "اختر المنصة التي تريد تفعيلها")}🎰 اختر واحدة من الخيارات بالأسفل.`,
@@ -294,6 +296,8 @@ const T = {
     hint: `أرسل /start للبدء.`,
     needJoin: "لازم تشترك في القناة الأول ❗",
     needJoinMsg: `⚠️ <b>الاشتراك في القناة إجباري</b>\n${RULE}\nلازم تشترك في قناتنا الرسمية قبل التحقق.\n\n${DOT} اضغط <b>الاشتراك في القناة</b>\n${DOT} وبعدين اضغط <b>التحقق الآن</b> تاني.`,
+    membershipUnavailable: "تعذر فحص الاشتراك مؤقتًا",
+    membershipUnavailableMsg: `⚠️ <b>تعذر فحص عضوية القناة</b>\n${RULE}\nلازم يكون البوت مشرفًا في القناة الرسمية علشان يقدر يتأكد من اشتراك الأعضاء.\n\n<i>تواصل مع الدعم وحاول مرة تانية بعد قليل.</i>`,
   },
 } as const;
 
@@ -426,15 +430,26 @@ function channelChatId(channelUrl: string): string | null {
   return m?.[1] ? `@${m[1]}` : null;
 }
 
-/** True when the user is a member of the official channel. */
-async function isChannelMember(channelUrl: string, userId?: number): Promise<boolean> {
+type MembershipResult = "member" | "not_member" | "unavailable";
+
+/** Check membership without treating Telegram permission failures as non-membership. */
+async function channelMembership(channelUrl: string, userId?: number): Promise<MembershipResult> {
   const chat = channelChatId(channelUrl);
-  if (!chat || !userId) return false;
+  if (!chat || !userId) return "unavailable";
   const res = (await call("getChatMember", { chat_id: chat, user_id: userId })) as
-    | { ok: boolean; result?: { status?: string } }
+    | { ok: boolean; result?: { status?: string; is_member?: boolean } }
     | null;
+  if (!res?.ok) return "unavailable";
   const status = res?.result?.status;
-  return status === "member" || status === "administrator" || status === "creator";
+  if (
+    status === "member" ||
+    status === "administrator" ||
+    status === "creator" ||
+    (status === "restricted" && res.result?.is_member === true)
+  ) {
+    return "member";
+  }
+  return "not_member";
 }
 
 export async function handleUpdate(update: any) {
@@ -505,7 +520,16 @@ export async function handleUpdate(update: any) {
         await sendMessage(chatId, T[lang].step5);
         return;
       }
-      if (!(await isChannelMember(settings.channelUrl, cb.from?.id))) {
+      const membership = await channelMembership(settings.channelUrl, cb.from?.id);
+      if (membership === "unavailable") {
+        await answerCallback(cb.id, T[lang].membershipUnavailable, true);
+        await sendMessage(chatId, T[lang].membershipUnavailableMsg, [
+          [{ text: T[lang].support, url: settings.supportUrl }],
+          [{ text: T[lang].verify, callback_data: `verify:${lang}:${id}` }],
+        ]);
+        return;
+      }
+      if (membership === "not_member") {
         await answerCallback(cb.id, T[lang].needJoin, true);
         await sendMessage(chatId, T[lang].needJoinMsg, [
           [{ text: T[lang].channel, url: settings.channelUrl }],
