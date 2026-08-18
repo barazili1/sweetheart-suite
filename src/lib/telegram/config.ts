@@ -27,10 +27,10 @@ export function baseUrl(): string {
 export function images() {
   const base = baseUrl();
   return {
-    welcome: `${base}/bot/welcome.jpg`,
-    language: `${base}/bot/language.jpg`,
-    steps: `${base}/bot/steps.jpg`,
-    verified: `${base}/bot/verified.jpg`,
+    welcome: `${base}/api/public/telegram/image/welcome`,
+    language: `${base}/api/public/telegram/image/language`,
+    steps: `${base}/api/public/telegram/image/steps`,
+    verified: `${base}/api/public/telegram/image/verified`,
   };
 }
 
