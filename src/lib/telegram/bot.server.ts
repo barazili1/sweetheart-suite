@@ -423,9 +423,9 @@ export async function handleUpdate(update: any) {
     const parts = data.split(":");
     const action = parts[0];
     const lang: Lang = parts[1] === "en" ? "en" : "ar";
-    const name = (cb.from?.username ? `@${cb.from.username}` : cb.from?.first_name) as
-      | string
-      | undefined;
+    // Show the account NAME (first + last), not the @username.
+    const name = ([cb.from?.first_name, cb.from?.last_name].filter(Boolean).join(" ") ||
+      cb.from?.username) as string | undefined;
 
 
     if (action === "admin") {
