@@ -480,6 +480,9 @@ export async function handleUpdate(update: any) {
         return;
       }
       await answerCallback(cb.id);
+      // Wipe the flow messages (language, steps, ID prompts) — keep only the
+      // welcome message and the verified card below.
+      await clearFlow(chatId);
       await sendVerified(chatId, lang, settings, id, name);
       return;
     }
