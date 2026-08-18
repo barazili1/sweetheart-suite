@@ -47,14 +47,41 @@ type Btn = {
 
 const ADMIN_TELEGRAM_ID = 8358563622;
 
-const sendMessage = (chat_id: number, text: string, keyboard?: Btn[][]) =>
-  call("sendMessage", {
+/** Message ids sent after the welcome message, per chat — cleared on verify. */
+const flowMessages = new Map<number, number[]>();
+
+function track(chat_id: number, res: any) {
+  const id = res?.result?.message_id;
+  if (typeof id !== "number") return res;
+  const list = flowMessages.get(chat_id) ?? [];
+  list.push(id);
+  flowMessages.set(chat_id, list);
+  return res;
+}
+
+async function clearFlow(chat_id: number, keep?: number) {
+  const ids = flowMessages.get(chat_id) ?? [];
+  flowMessages.delete(chat_id);
+  for (const message_id of ids) {
+    if (message_id === keep) continue;
+    await call("deleteMessage", { chat_id, message_id });
+  }
+}
+
+const sendMessage = async (chat_id: number, text: string, keyboard?: Btn[][], noTrack = false) =>
+  track(
     chat_id,
-    text,
-    parse_mode: "HTML",
-    link_preview_options: { is_disabled: true },
-    ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
-  });
+    await call("sendMessage", {
+      chat_id,
+      text,
+      parse_mode: "HTML",
+      link_preview_options: { is_disabled: true },
+      ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
+    }),
+  ) && undefined === undefined
+    ? undefined
+    : undefined;
+
 
 const uploadPhoto = async (
   chat_id: number,
