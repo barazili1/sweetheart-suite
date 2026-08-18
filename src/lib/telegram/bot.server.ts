@@ -6,11 +6,13 @@ import {
   type Lang,
   type PlatformKey,
 } from "./config";
+import { imageBytes, type ImageKey } from "./media.server";
 import {
   getBotSettings,
   updateBotSettings,
   type BotSettings,
 } from "./settings.server";
+
 
 const API = "https://api.telegram.org";
 
