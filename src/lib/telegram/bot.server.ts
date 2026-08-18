@@ -45,20 +45,6 @@ type Btn = {
 
 const ADMIN_TELEGRAM_ID = 8358563622;
 
-const sendPhoto = (
-  chat_id: number,
-  photo: string,
-  caption: string,
-  keyboard?: Btn[][],
-) =>
-  call("sendPhoto", {
-    chat_id,
-    photo,
-    caption,
-    parse_mode: "HTML",
-    ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
-  });
-
 const sendMessage = (chat_id: number, text: string, keyboard?: Btn[][]) =>
   call("sendMessage", {
     chat_id,
@@ -67,6 +53,25 @@ const sendMessage = (chat_id: number, text: string, keyboard?: Btn[][]) =>
     link_preview_options: { is_disabled: true },
     ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
+
+const sendPhoto = async (
+  chat_id: number,
+  photo: string,
+  caption: string,
+  keyboard?: Btn[][],
+) => {
+  const res = await call("sendPhoto", {
+    chat_id,
+    photo,
+    caption,
+    parse_mode: "HTML",
+    ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
+  });
+  // The image host can be unreachable for Telegram (private preview URLs, 403s).
+  // Never lose the message: fall back to the text version with the same buttons.
+  if (!res || !res.ok) return sendMessage(chat_id, caption, keyboard);
+  return res;
+};
 
 const answerCallback = (id: string, text?: string) =>
   call("answerCallbackQuery", { callback_query_id: id, ...(text ? { text } : {}) });
