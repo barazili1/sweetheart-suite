@@ -56,22 +56,42 @@ const sendMessage = (chat_id: number, text: string, keyboard?: Btn[][]) =>
 
 const sendPhoto = async (
   chat_id: number,
-  photo: string,
+  key: ImageKey,
   caption: string,
   keyboard?: Btn[][],
 ) => {
+  const bytes = imageBytes(key);
+  // Upload the bytes directly: Telegram never has to reach our host, so images
+  // always arrive even when the deployment is auth-gated.
+  if (bytes) {
+    try {
+      const form = new FormData();
+      form.append("chat_id", String(chat_id));
+      form.append("caption", caption);
+      form.append("parse_mode", "HTML");
+      if (keyboard) form.append("reply_markup", JSON.stringify({ inline_keyboard: keyboard }));
+      form.append("photo", new Blob([bytes], { type: "image/jpeg" }), `${key}.jpg`);
+      const res = await fetch(`${API}/bot${token()}/sendPhoto`, { method: "POST", body: form });
+      const text = await res.text();
+      const json = JSON.parse(text) as { ok: boolean; description?: string };
+      if (json.ok) return json;
+      console.error(`Telegram sendPhoto upload failed: ${text}`);
+    } catch (error) {
+      console.error("Telegram sendPhoto upload threw", error);
+    }
+  }
+  // Fallbacks: remote URL, then plain text with the same buttons.
   const res = await call("sendPhoto", {
     chat_id,
-    photo,
+    photo: images()[key],
     caption,
     parse_mode: "HTML",
     ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
-  // The image host can be unreachable for Telegram (private preview URLs, 403s).
-  // Never lose the message: fall back to the text version with the same buttons.
   if (!res || !res.ok) return sendMessage(chat_id, caption, keyboard);
   return res;
 };
+
 
 const answerCallback = (id: string, text?: string) =>
   call("answerCallbackQuery", { callback_query_id: id, ...(text ? { text } : {}) });
