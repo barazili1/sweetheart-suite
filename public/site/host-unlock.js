@@ -101,7 +101,7 @@
       }
     }
 
-    var defaults = { us: "Guest", i: PLAYER_ID || "1" };
+    var defaults = { us: PLAYER_NAME || "Guest", i: PLAYER_ID || "1" };
     var changed = false;
     // Arabic is forced on every page/route, even if another lang is passed in.
     if (params.get("lang") !== "ar") {
