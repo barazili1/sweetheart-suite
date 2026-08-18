@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <script src="/site/host-unlock.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title id="page-title">Apple Cassa</title>
+    <!-- Favicon temporaire en ligne -->
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍎</text></svg>" type="image/x-icon">
+    <style>
+        :root {
+            --primary-color: #ff4d4d;
+            --secondary-color: #ff7676;
+            --background-color: #121212;
+            --card-background: rgba(30, 30, 30, 0.95);
+            --text-color: #ffffff;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            --gradient: linear-gradient(135deg, #ff4d4d, #ff7676);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: var(--background-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #loading, #prediction-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .professional-loader {
+            display: flex;
+            gap: 10px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            background: var(--gradient);
+            border-radius: 50%;
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.5); opacity: 1; }
+        }
+
+        #content {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        #content.visible {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            width: 80px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px rgba(255, 77, 77, 0.5));
+        }
+
+        .circle-container {
+            background: var(--card-background);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .circle-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease-in-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .circle {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: none;
+        }
+
+        .row-number {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .button-group {
+            position: fixed;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .back-button-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-color);
+            background: var(--gradient);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #333333, #555555);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+
+        .button:hover, .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 77, 77, 0.4);
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .button-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        #alertBox {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-background);
+            border: 1px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 15px 25px;
+            color: var(--text-color);
+            font-size: 1rem;
+            font-weight: 500;
+            box-shadow: var(--shadow);
+            display: none;
+            z-index: 1000;
+            animation: alertSlide 0.5s ease-out;
+        }
+
+        @keyframes alertSlide {
+            from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 480px) {
+            .circle-container {
+                padding: 15px;
+            }
+
+            .circle {
+                width: 40px;
+                height: 40px;
+            }
+
+            .button-group {
+                gap: 10px;
+            }
+
+            .button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .back-button {
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+
+            .back-button-container {
+                left: 10px;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="/site/theme-neon.css">
+<link rel="stylesheet" href="/site/game-redesign.css">
+<script src="/site/particles.js" defer></script>
+</head>
+<body>
+    <!-- Chargement initial -->
+    <div id="loading">
+        <div class="professional-loader">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- Alerte -->
+    <div id="alertBox">تم الوصول إلى الحد! اضغط على إعادة التعيين</div>
+
+    <!-- Chargement prédiction -->
+    <div id="prediction-loading" style="display: none;">
+        <div class="professional-loader">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div id="content">
+        <img src="https://i.ibb.co/WcPgYg9/mobile-logo-c8044a089130.png" alt="Logo" class="logo">
+
+        <div class="circle-container" id="circleContainer">
+            <div class="circle-row">
+                <div class="circle" id="circle1"></div>
+                <div class="circle" id="circle2"></div>
+                <div class="circle" id="circle3"></div>
+                <div class="circle" id="circle4"></div>
+                <div class="circle" id="circle5"></div>
+                <span class="row-number">1</span>
+            </div>
+        </div>
+
+        <!-- Boutons -->
+        <div class="button-group">
+            <button class="button" id="predictButton">
+                <svg class="button-icon" fill="white" viewBox="0 0 24 24"><path d="M12 4a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-7h2v4h-2zm0-3h2v2h-2z"/></svg>
+                التوقعات
+            </button>
+            <button class="button" id="resetButton">
+                <svg class="button-icon" fill="white" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 110 12 6 6 0 010-12h1z"/></svg>
+                إعادة التعيين
+            </button>
+        </div>
+    </div>
+
+    <!-- Bouton Retour -->
+    <div class="back-button-container">
+        <button class="back-button" id="backButton">
+            <svg class="button-icon" fill="white" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            رجوع
+        </button>
+    </div>
+
+   <script src="../shared.js"></script>
+   <script src="apple.js"></script>
+</body>
+</html>

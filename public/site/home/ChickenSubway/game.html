@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <script src="/site/host-unlock.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <title>Chicken Subway Predictor</title>
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐓</text></svg>" type="image/x-icon">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;700&display=swap');
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#1a1a2e}
+
+        /* === Subway Surfers style road background === */
+        .game-bg{position:fixed;top:0;left:0;right:0;bottom:0;z-index:0;overflow:hidden;background:linear-gradient(180deg,#2d1b69 0%,#1a1a2e 40%,#0f3460 100%)}
+        /* Sky / buildings silhouette */
+        .game-bg::before{content:'';position:absolute;top:0;left:0;right:0;height:45%;background:
+            linear-gradient(180deg,#16213e 0%,#0f3460 60%,transparent 100%);z-index:1}
+        /* Road surface */
+        .road{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;height:65%;background:linear-gradient(180deg,#3a3a3a 0%,#555 100%);clip-path:polygon(35% 0%,65% 0%,100% 100%,0% 100%);z-index:2}
+        .road::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:4px;height:100%;background:repeating-linear-gradient(180deg,#FFD54F 0px,#FFD54F 30px,transparent 30px,transparent 60px);animation:roadScroll 1.5s linear infinite;z-index:3}
+        .road::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:
+            linear-gradient(90deg,rgba(255,255,255,0.08) 0%,transparent 15%,transparent 85%,rgba(255,255,255,0.08) 100%);z-index:2}
+        @keyframes roadScroll{0%{background-position:0 -60px}100%{background-position:0 0}}
+
+        /* Lane dividers */
+        .lane-left,.lane-right{position:absolute;bottom:0;height:65%;width:2px;z-index:3;animation:roadScroll 1.5s linear infinite}
+        .lane-left{left:40%;background:repeating-linear-gradient(180deg,rgba(255,255,255,0.3) 0px,rgba(255,255,255,0.3) 20px,transparent 20px,transparent 50px)}
+        .lane-right{right:40%;background:repeating-linear-gradient(180deg,rgba(255,255,255,0.3) 0px,rgba(255,255,255,0.3) 20px,transparent 20px,transparent 50px)}
+
+        /* Buildings silhouette */
+        .buildings{position:absolute;bottom:35%;left:0;right:0;height:30%;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;padding:0 5%}
+        .bldg{background:#0a0a23;border-radius:3px 3px 0 0;opacity:0.7}
+        .bldg:nth-child(1){width:8%;height:60%}
+        .bldg:nth-child(2){width:6%;height:80%}
+        .bldg:nth-child(3){width:10%;height:50%}
+        .bldg:nth-child(4){width:7%;height:70%}
+        .bldg:nth-child(5){width:9%;height:55%}
+        .bldg:nth-child(6){width:6%;height:90%}
+        .bldg:nth-child(7){width:8%;height:65%}
+        .bldg:nth-child(8){width:5%;height:75%}
+
+        /* Speed lines */
+        .speed-line{position:absolute;width:2px;background:linear-gradient(180deg,transparent,rgba(0,188,212,0.4),transparent);z-index:4;animation:speedDown 0.8s linear infinite;opacity:0}
+        .speed-line:nth-child(1){left:25%;height:80px;animation-delay:0s}
+        .speed-line:nth-child(2){left:45%;height:60px;animation-delay:0.3s}
+        .speed-line:nth-child(3){left:70%;height:70px;animation-delay:0.6s}
+        @keyframes speedDown{0%{top:-80px;opacity:0}20%{opacity:0.6}80%{opacity:0.6}100%{top:100vh;opacity:0}}
+
+
+
+        .header{text-align:center;padding:1.5rem 1rem 1rem;position:relative;z-index:10}
+        .logo-icon{display:inline-block;font-size:1.5rem;font-weight:900;font-family:'Orbitron',monospace;color:#fff;background:linear-gradient(135deg,#00BCD4,#FF5722);padding:0.4rem 1.2rem;border-radius:12px;margin-bottom:0.4rem;box-shadow:0 4px 18px rgba(0,188,212,0.4)}
+        .logo{font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;background:linear-gradient(135deg,#4DD0E1,#fff,#FF8A65);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px;margin-bottom:0.2rem}
+        .subtitle{color:rgba(255,255,255,0.8);font-size:0.95rem;font-weight:500}
+        .version{background:linear-gradient(135deg,#00BCD4,#FF5722);color:#fff;padding:0.25rem 0.9rem;border-radius:20px;font-size:0.8rem;font-weight:600;display:inline-block;margin-top:0.25rem}
+
+        .container{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:1rem;position:relative;z-index:10;width:100%;max-width:440px}
+
+        /* Circle */
+        .print-signal{width:230px;height:230px;border-radius:50%;border:5px solid #00BCD4;background:rgba(13,27,42,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Inter',sans-serif;font-size:1rem;color:#fff;text-align:center;padding:18px;box-shadow:0 0 40px rgba(0,188,212,0.25),inset 0 0 30px rgba(0,188,212,0.08);margin-bottom:1.5rem;transition:box-shadow 0.4s}
+
+        .signal-label{font-size:11px;text-transform:uppercase;color:rgba(255,255,255,0.65);letter-spacing:1.5px;margin-bottom:4px;font-family:'Inter',sans-serif}
+        .signal-text{font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:#fff;line-height:1.5;padding:0 5px}
+        .signal-steps{font-family:'Orbitron',monospace;font-size:38px;font-weight:700;color:#4DD0E1;margin-top:4px}
+        .loading-text{font-size:16px;color:rgba(255,255,255,0.7);animation:pulse 1.5s ease-in-out infinite}
+        @keyframes pulse{0%,100%{opacity:0.5}50%{opacity:1}}
+
+        /* Countdown */
+        .stop-block{width:100%;max-width:300px;margin-bottom:1.5rem;transition:opacity 0.4s,transform 0.4s}
+        .stop-block.deactivate{opacity:0;transform:translateY(10px);pointer-events:none}
+        .stop-timer{text-align:center;color:rgba(255,255,255,0.7);font-size:0.85rem;margin-bottom:0.4rem}
+        .stop-progress{width:100%;height:6px;border-radius:3px;background:rgba(255,255,255,0.12);overflow:hidden;background-image:linear-gradient(90deg,#00BCD4,#4DD0E1);background-repeat:no-repeat;background-size:0% 100%;transition:background-size 1s linear}
+
+        /* Button */
+        .button-game{width:100%;max-width:300px;padding:14px;border:none;border-radius:50px;background:linear-gradient(135deg,#00838F,#26C6DA);color:#fff;font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px;box-shadow:0 6px 25px rgba(0,188,212,0.3);transition:transform 0.2s,box-shadow 0.2s;margin-bottom:0.8rem}
+        .button-game:hover{transform:translateY(-2px);box-shadow:0 10px 35px rgba(0,188,212,0.45)}
+        .button-game:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+        .back-btn{background:none;border:none;color:rgba(255,255,255,0.6);font-size:0.9rem;cursor:pointer;padding:0.5rem 1rem;transition:color 0.3s}
+        .back-btn:hover{color:#fff}
+
+        /* Responsive */
+        @media(max-width:400px){
+            .print-signal{width:195px;height:195px;padding:14px}
+            .signal-text{font-size:11px}
+            .signal-steps{font-size:32px}
+            .logo{font-size:1.6rem}
+        }
+        @media(max-width:360px){
+            .print-signal{width:170px;height:170px;padding:10px}
+            .signal-text{font-size:10px}
+            .signal-steps{font-size:28px}
+            .logo{font-size:1.4rem}
+            .button-game{font-size:0.9rem;padding:12px}
+        }
+        @media(max-height:680px){
+            .header{padding:0.8rem 1rem 0.5rem}
+            .print-signal{width:180px;height:180px;margin-bottom:1rem}
+            .signal-steps{font-size:30px}
+            .container{padding:0.5rem}
+        }
+    </style>
+<link rel="stylesheet" href="/site/theme-neon.css">
+<link rel="stylesheet" href="/site/game-redesign.css">
+<script src="/site/particles.js" defer></script>
+</head>
+<body>
+    <div class="game-bg">
+        <div class="buildings">
+            <div class="bldg"></div><div class="bldg"></div><div class="bldg"></div><div class="bldg"></div>
+            <div class="bldg"></div><div class="bldg"></div><div class="bldg"></div><div class="bldg"></div>
+        </div>
+        <div class="road"></div>
+        <div class="lane-left"></div>
+        <div class="lane-right"></div>
+        <div class="speed-line"></div>
+        <div class="speed-line"></div>
+        <div class="speed-line"></div>
+    </div>
+    <div class="header">
+        <div class="logo-icon">🐓 CS</div>
+        <h1 class="logo">Chicken Subway</h1>
+        <p class="subtitle" id="subtitle">توقع ذكي</p>
+        <span class="version" id="version">Version 2.0</span>
+    </div>
+
+    <div class="container">
+        <div class="print-signal" id="print-signal"><span id="init-text">اضغط على
+التوقع</span></div>
+
+        <div class="stop-block deactivate" id="stop-block">
+            <div class="stop-timer" id="stop-timer"></div>
+            <div class="stop-progress" id="stop-progress"></div>
+        </div>
+
+        <button class="button-game" id="get-signal">التوقع</button>
+        <button class="back-btn" id="back-btn">← رجوع</button>
+    </div>
+
+    <script src="../shared.js"></script>
+    <script src="js.js"></script>
+</body>
+</html>

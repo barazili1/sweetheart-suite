@@ -1,0 +1,364 @@
+ /* Style général */
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-image: url('https://i.ibb.co/V23HTw7/Screenshot-2024-08-05-16-35-43-563-com-miui-videoplayer.jpg');
+      background-size: cover;
+      background-position: center;
+      font-family: 'Roboto', sans-serif;
+      overflow: hidden;
+    }
+
+    #loading, #prediction-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s ease;
+    }
+
+    .professional-loader {
+      display: flex;
+      gap: 1vmin;
+    }
+
+    .dot {
+      width: 2vmin;
+      height: 2vmin;
+      background: #ffffff;
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.4;
+      }
+      50% {
+        transform: scale(1.5);
+        opacity: 1;
+      }
+    }
+
+    #content {
+      display: none;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #content.visible {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Logo agrandi */
+    .logo {
+      position: absolute;
+      top: 2vmin;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30vmin;
+      max-width: 180px;
+      height: auto;
+      filter: drop-shadow(0 0.3vmin 0.6vmin rgba(0, 0, 0, 0.3));
+    }
+
+    /* Alerte */
+    #alertBox {
+      position: fixed;
+      top: 15vmin;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #ff4d4d, #cc0000);
+      color: white;
+      padding: 2.5vmin 5vmin;
+      border-radius: 1.2vmin;
+      box-shadow: 0 0.5vmin 1.5vmin rgba(0, 0, 0, 0.3);
+      font-size: 3.5vmin;
+      font-weight: 500;
+      display: none;
+      animation: slideIn 0.5s ease;
+      z-index: 999;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    @keyframes slideIn {
+      from { transform: translate(-50%, -2vmin); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+
+    .circle-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5vmin;
+      margin-top: 18vmin;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 2.5vmin;
+      scrollbar-width: thin;
+      width: 90%;
+    }
+
+    .circle-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2.5vmin;
+      position: relative;
+      animation: fadeInRow 0.5s ease;
+    }
+
+    @keyframes fadeInRow {
+      from { opacity: 0; transform: translateY(1vmin); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .circle {
+      width: 10vmin;
+      height: 10vmin;
+      min-width: 50px;
+      min-height: 50px;
+      background: transparent;
+      border: 0.8vmin solid #1e3a8a;
+      border-radius: 50%;
+      box-shadow: 0 0.6vmin 1.2vmin rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .circle:hover {
+      transform: scale(1.1);
+      border-color: #3b82f6;
+    }
+
+    .circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .row-number {
+      font-size: 3vmin;
+      font-weight: 600;
+      color: #ffffff;
+      position: absolute;
+      left: -5vmin;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.5);
+      padding: 0.6vmin 1.2vmin;
+      border-radius: 2vmin;
+    }
+
+    .buttons {
+      position: fixed;
+      bottom: 10vmin;
+      display: flex;
+      justify-content: center;
+      gap: 2.5vmin;
+      z-index: 10;
+      width: 100%;
+      padding: 0 2.5vmin;
+      box-sizing: border-box;
+    }
+
+    .button {
+      padding: 2.5vmin 6vmin;
+      font-size: 3.2vmin;
+      font-weight: 500;
+      color: white;
+      background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+      border: none;
+      border-radius: 1.2vmin;
+      box-shadow: 0 0.6vmin 1.8vmin rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-0.6vmin);
+      background: linear-gradient(135deg, #60a5fa, #2563eb);
+    }
+
+    .button:disabled {
+      background: #6b7280;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .button-icon {
+      width: 4vmin;
+      height: 4vmin;
+    }
+
+    /* Style pour l'écran de restriction */
+    #restricted-screen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #1c2526;
+      color: #ffffff;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      z-index: 2000;
+      font-size: 4vmin;
+      padding: 5vmin;
+    }
+
+    #restricted-screen p {
+      margin: 2vmin 0;
+    }
+
+    #back-button {
+      margin-top: 5vmin;
+      padding: 2vmin 5vmin;
+      font-size: 3.5vmin;
+      color: white;
+      background: linear-gradient(135deg, #ff4d4d, #cc0000);
+      border: none;
+      border-radius: 1vmin;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    #back-button:hover {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 480px) {
+      .circle {
+        width: 12vmin;
+        height: 12vmin;
+        min-width: 45px;
+        min-height: 45px;
+      }
+      .button {
+        padding: 2.5vmin 4vmin;
+        font-size: 3.5vmin;
+      }
+      .logo {
+        width: 24vmin;
+        max-width: 120px;
+      }
+      .circle-container {
+        max-height: 50vh;
+        margin-top: 15vmin;
+      }
+      #alertBox {
+        font-size: 4vmin;
+        padding: 2.5vmin 4vmin;
+      }
+      .row-number {
+        font-size: 3.5vmin;
+        left: -2vmin;
+      }
+      .button-icon {
+        width: 4.5vmin;
+        height: 4.5vmin;
+      }
+      #restricted-screen {
+        font-size: 5vmin;
+      }
+      #back-button {
+        font-size: 4vmin;
+        padding: 2.5vmin 6vmin;
+      }
+    }
+
+    @media (min-width: 481px) and (max-width: 768px) {
+      .circle {
+        width: 11vmin;
+        height: 11vmin;
+        min-width: 50px;
+        min-height: 50px;
+      }
+      .button {
+        padding: 2.5vmin 5vmin;
+        font-size: 3vmin;
+      }
+      .logo {
+        width: 26.4vmin;
+        max-width: 144px;
+      }
+      .circle-container {
+        max-height: 55vh;
+      }
+      .button-icon {
+        width: 4vmin;
+        height: 4vmin;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .circle {
+        width: 9vmin;
+        height: 9vmin;
+        min-width: 60px;
+        min-height: 60px;
+      }
+      .button {
+        padding: 2vmin 6vmin;
+        font-size: 2.5vmin;
+        max-width: 220px;
+      }
+      .logo {
+        width: 24vmin;
+        max-width: 168px;
+      }
+      .circle-container {
+        max-height: 60vh;
+      }
+    }
+
+    @media (orientation: landscape) and (max-height: 500px) {
+      .circle-container {
+        max-height: 40vh;
+        margin-top: 12vmin;
+      }
+      .logo {
+        top: 1vmin;
+      }
+      #alertBox {
+        top: 10vmin;
+      }
+    }

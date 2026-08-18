@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <script src="/site/host-unlock.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <title id="page-title">Labu Run Predictor</title>
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F3C3;</text></svg>" type="image/x-icon">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;700;900&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0a1628;
+            color: #fff;
+            overflow: hidden;
+        }
+        /* === ARRIERE-PLAN PRISON BLEU === */
+        .prison-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0;
+            overflow: hidden;
+            /* Mur de blocs */
+            background:
+                linear-gradient(180deg, #0c1a2e 0%, #112240 40%, #0e1d38 70%, #081428 100%);
+        }
+        /* Fenetre de prison (hublot arrondi) */
+        .prison-window {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 180px;
+            border-radius: 18px;
+            border: 8px solid #1a3050;
+            background: linear-gradient(180deg, #1a4a7a 0%, #0d3060 40%, #0a2040 100%);
+            box-shadow: inset 0 0 35px rgba(0,80,180,0.35), 0 0 40px rgba(0,100,200,0.15);
+            overflow: hidden;
+        }
+        .prison-window::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                repeating-linear-gradient(90deg, transparent 0px, transparent 32px, rgba(10,30,60,0.85) 32px, rgba(10,30,60,0.85) 36px),
+                repeating-linear-gradient(0deg, transparent 0px, transparent 36px, rgba(10,30,60,0.85) 36px, rgba(10,30,60,0.85) 40px);
+        }
+        /* Lumiere projetee depuis la fenetre */
+        .prison-light {
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 120px solid transparent;
+            border-right: 120px solid transparent;
+            border-top: 250px solid rgba(30,100,200,0.08);
+            filter: blur(20px);
+        }
+        /* Barreaux verticaux */
+        .bars-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(90deg, transparent 0px, transparent 56px, rgba(8,20,40,0.35) 56px, rgba(8,20,40,0.35) 60px);
+            pointer-events: none;
+        }
+        /* Mur de briques */
+        .brick-wall {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                repeating-linear-gradient(0deg, transparent 0px, transparent 38px, rgba(15,35,65,0.5) 38px, rgba(15,35,65,0.5) 40px),
+                repeating-linear-gradient(90deg, transparent 0px, transparent 78px, rgba(15,35,65,0.35) 78px, rgba(15,35,65,0.35) 80px);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        /* Sol de prison */
+        .prison-floor {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 60px;
+            background: linear-gradient(180deg, #0a1628 0%, #06101e 100%);
+            border-top: 2px solid rgba(25,60,100,0.3);
+        }
+        .prison-floor::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(90deg, transparent 0px, transparent 48px, rgba(15,30,55,0.4) 48px, rgba(15,30,55,0.4) 50px);
+        }
+        /* === LAYOUT === */
+        .page-wrap {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 430px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+            padding: 2rem 1.2rem 1.5rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 1.8rem;
+            width: 100%;
+        }
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.2rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #4fc3f7, #fff, #81d4fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            color: rgba(255,255,255,0.72);
+            font-size: 0.95rem;
+            margin-bottom: 0.4rem;
+        }
+        .version {
+            display: inline-block;
+            background: linear-gradient(90deg, #1565c0, #42a5f5);
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 0.22rem 0.9rem;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+        /* === CERCLE === */
+        .print-signal {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 230px;
+            height: 230px;
+            background-color: #0a1628;
+            border: 5px solid #42a5f5;
+            border-radius: 50%;
+            text-align: center;
+            transition: all 0.4s;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 0 30px rgba(66,165,245,0.25), inset 0 0 22px rgba(21,101,192,0.12);
+        }
+        .signal-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+        }
+        .signal-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 42px;
+            font-weight: 900;
+            color: #fff;
+        }
+        .print-signal .init-hint {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.75);
+            padding: 0 26px;
+            line-height: 1.7;
+        }
+        .loading-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.9);
+            padding: 0 20px;
+            text-align: center;
+            animation: loadPulse 1s ease-in-out infinite;
+        }
+        @keyframes loadPulse {
+            0%, 100% { opacity: 0.35; }
+            50%       { opacity: 1;    }
+        }
+        /* === COUNTDOWN === */
+        .stop-signal-time {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            width: 240px;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .stop-timer {
+            font-size: 15px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.88);
+            text-align: center;
+        }
+        .stop-progress {
+            width: 230px;
+            height: 14px;
+            background: linear-gradient(90deg, #1565c0 0%, #42a5f5 100%) left / 0% 100% no-repeat #0e1d35;
+            border-radius: 20px;
+        }
+        .deactivate {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            height: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+        /* === BOUTONS === */
+        .button-game {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            max-width: 280px;
+        }
+        .diff-toggle {
+            display: flex;
+            width: 100%;
+            border-radius: 30px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.15);
+            margin-bottom: 14px;
+        }
+        .diff-option {
+            flex: 1;
+            height: 44px;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(255,255,255,0.05);
+            transition: all 0.3s;
+        }
+        .diff-option.active {
+            color: #fff;
+            background: linear-gradient(90deg, #1565c0 0%, #42a5f5 100%);
+            box-shadow: 0 4px 18px rgba(21,101,192,0.3);
+        }
+        .diff-option.active.moyen {
+            background: linear-gradient(90deg, #e65100 0%, #ff9800 100%);
+            box-shadow: 0 4px 18px rgba(230,81,0,0.3);
+        }
+        .predict-btn {
+            width: 100%;
+            height: 54px;
+            border: none;
+            background: linear-gradient(90deg, #1565c0 0%, #42a5f5 100%);
+            border-radius: 30px;
+            color: #fff;
+            font-size: 17px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 22px rgba(21,101,192,0.4);
+        }
+        .predict-btn:hover  { transform: scale(1.02); box-shadow: 0 6px 30px rgba(21,101,192,0.55); }
+        .predict-btn:active { transform: scale(0.97); }
+        .predict-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-back {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 130px;
+            height: 36px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 30px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-back:hover  { background: rgba(255,255,255,0.2); }
+        .btn-back:active { transform: scale(0.95); }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 500px) {
+        }
+        @media (max-width: 400px) {
+            .page-wrap    { padding: 1.4rem 0.8rem 1rem; }
+            .header       { margin-bottom: 1.2rem; }
+            .print-signal { width: 195px; height: 195px; }
+            .signal-value { font-size: 36px; }
+            .stop-progress { width: 195px; }
+            .button-game  { max-width: 240px; gap: 10px; }
+            .diff-option { font-size: 12px; height: 40px; }
+            .predict-btn { font-size: 14px; height: 48px; }
+            .logo         { font-size: 1.8rem; }
+            .prison-window { width: 120px; height: 135px; }
+        }
+        @media (max-width: 360px) {
+            .page-wrap    { padding: 1rem 0.6rem 0.8rem; }
+            .print-signal { width: 170px; height: 170px; }
+            .signal-value { font-size: 30px; }
+            .stop-progress { width: 170px; }
+            .logo         { font-size: 1.5rem; }
+            .subtitle     { font-size: 0.82rem; }
+            .diff-option { font-size: 11px; height: 38px; }
+            .predict-btn { font-size: 13px; height: 44px; }
+            .prison-window { width: 100px; height: 110px; }
+        }
+        @media (max-height: 680px) {
+            .header       { margin-bottom: 1rem; }
+            .print-signal { margin-bottom: 0.7rem; }
+            .stop-signal-time { margin-bottom: 0.8rem; }
+            .page-wrap    { padding-top: 1rem; }
+        }
+    </style>
+<link rel="stylesheet" href="/site/theme-neon.css">
+<link rel="stylesheet" href="/site/game-redesign.css">
+<script src="/site/particles.js" defer></script>
+</head>
+<body>
+    <!-- Arriere-plan prison bleu -->
+    <div class="prison-bg">
+        <div class="brick-wall"></div>
+        <div class="prison-window"></div>
+        <div class="prison-light"></div>
+        <div class="bars-overlay"></div>
+        <div class="prison-floor"></div>
+    </div>
+
+    <div class="page-wrap">
+        <div class="header">
+            <h1 class="logo" id="logo">Labu Run</h1>
+            <p class="subtitle" id="subtitle">توقع ذكي</p>
+            <span class="version" id="version">Version 2.0</span>
+        </div>
+
+        <div class="print-signal" id="print-signal">
+            <span class="init-hint" id="init-text">اضغط على NEXT SIGNAL</span>
+        </div>
+
+        <div class="stop-signal-time deactivate" id="stop-block">
+            <p class="stop-timer" id="stop-timer"></p>
+            <div class="stop-progress" id="stop-progress"></div>
+        </div>
+
+        <div class="button-game">
+            <div class="diff-toggle">
+                <button class="diff-option active" id="opt-facile" data-diff="facile">سهل</button>
+                <button class="diff-option moyen" id="opt-moyen" data-diff="moyen">متوسط</button>
+            </div>
+            <button class="predict-btn" id="get-signal">التوقع</button>
+            <button class="btn-back" id="back-btn">رجوع</button>
+        </div>
+    </div>
+
+    <script src="../shared.js"></script>
+    <script src="js.js"></script>
+</body>
+</html>

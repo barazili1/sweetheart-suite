@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <script src="/site/host-unlock.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title id="page-title">واجهة التوقع</title>
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐸</text></svg>" type="image/x-icon">
+  <style>
+    /* Style général */
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(45deg, #1a4c1a, #2d5016, #4a7c3a, #3d6b2a);
+      background-size: 400% 400%;
+      animation: forestWave 8s ease-in-out infinite;
+      font-family: 'Roboto', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Animation de la forêt */
+    @keyframes forestWave {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Branches et feuillage d'arrière-plan */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        /* Branches horizontales */
+        linear-gradient(90deg, transparent 40%, rgba(101, 67, 33, 0.3) 45%, rgba(101, 67, 33, 0.3) 55%, transparent 60%),
+        /* Branches verticales */
+        linear-gradient(0deg, transparent 30%, rgba(101, 67, 33, 0.2) 35%, rgba(101, 67, 33, 0.2) 65%, transparent 70%),
+        /* Motif de feuillage */
+        radial-gradient(circle at 30% 40%, rgba(34, 139, 34, 0.2) 15%, transparent 20%),
+        radial-gradient(circle at 70% 60%, rgba(34, 139, 34, 0.2) 15%, transparent 20%);
+      background-size: 100% 15vh, 25vw 100%, 200px 200px, 150px 150px;
+      background-position: 0 0, 0 0, 0 0, 100px 100px;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* Crapauds animés en arrière-plan */
+    body::after {
+      content: '🐸';
+      position: absolute;
+      font-size: 3rem;
+      top: 25%;
+      left: -10%;
+      animation: frogHop1 14s linear infinite;
+      opacity: 0.3;
+      z-index: 0;
+    }
+
+    .nature-creature {
+      position: absolute;
+      font-size: 2.5rem;
+      top: 65%;
+      right: -10%;
+      animation: frogHop2 18s linear infinite;
+      opacity: 0.2;
+      z-index: 0;
+    }
+
+    .nature-creature::before {
+      content: '🐸';
+    }
+
+    @keyframes frogHop1 {
+      0% { transform: translateX(-200px) translateY(0px); }
+      20% { transform: translateX(20vw) translateY(-30px); }
+      25% { transform: translateX(25vw) translateY(0px); }
+      45% { transform: translateX(45vw) translateY(-25px); }
+      50% { transform: translateX(50vw) translateY(0px); }
+      70% { transform: translateX(70vw) translateY(-35px); }
+      75% { transform: translateX(75vw) translateY(0px); }
+      95% { transform: translateX(95vw) translateY(-20px); }
+      100% { transform: translateX(120vw) translateY(0px); }
+    }
+
+    @keyframes frogHop2 {
+      0% { transform: translateX(200px) translateY(0px); }
+      15% { transform: translateX(-15vw) translateY(-40px); }
+      20% { transform: translateX(-20vw) translateY(0px); }
+      35% { transform: translateX(-35vw) translateY(-30px); }
+      40% { transform: translateX(-40vw) translateY(0px); }
+      60% { transform: translateX(-60vw) translateY(-45px); }
+      65% { transform: translateX(-65vw) translateY(0px); }
+      85% { transform: translateX(-85vw) translateY(-25px); }
+      100% { transform: translateX(-120vw) translateY(0px); }
+    }
+
+    /* Particules de nature flottantes */
+    .nature-particle {
+      position: absolute;
+      background: rgba(34, 139, 34, 0.6);
+      border-radius: 50% 10% 50% 10%;
+      animation: natureFloat 10s linear infinite;
+      z-index: 0;
+    }
+
+    .nature-particle:nth-child(1) { width: 8px; height: 12px; left: 10%; animation-delay: 0s; }
+    .nature-particle:nth-child(2) { width: 6px; height: 10px; left: 25%; animation-delay: 2s; }
+    .nature-particle:nth-child(3) { width: 10px; height: 14px; left: 45%; animation-delay: 4s; }
+
+    @keyframes natureFloat {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.8; }
+      100% { transform: translateY(-80px) rotate(360deg); opacity: 0; }
+    }
+
+    #loading, #prediction-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(26, 76, 26, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s ease;
+    }
+
+    .professional-loader {
+      display: flex;
+      gap: 1vmin;
+    }
+
+    .dot {
+      width: 2vmin;
+      height: 2vmin;
+      background: #32cd32;
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+      box-shadow: 0 0 10px #32cd32;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.4;
+      }
+      50% {
+        transform: scale(1.5);
+        opacity: 1;
+      }
+    }
+
+    #content {
+      display: none;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #content.visible {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Logo agrandi */
+    .logo {
+      position: absolute;
+      top: 2vmin;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30vmin;
+      max-width: 180px;
+      height: auto;
+      filter: drop-shadow(0 0.3vmin 0.6vmin rgba(50, 205, 50, 0.5));
+      z-index: 2;
+    }
+
+    /* Alerte */
+    #alertBox {
+      position: fixed;
+      top: 15vmin;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #ff4d4d, #cc0000);
+      color: white;
+      padding: 2.5vmin 5vmin;
+      border-radius: 1.2vmin;
+      box-shadow: 0 0.5vmin 1.5vmin rgba(255, 0, 0, 0.5);
+      font-size: 3.5vmin;
+      font-weight: 500;
+      display: none;
+      animation: slideIn 0.5s ease;
+      z-index: 999;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    @keyframes slideIn {
+      from { transform: translate(-50%, -2vmin); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+
+    .rectangle-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5vmin;
+      margin-top: 18vmin;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 2.5vmin;
+      scrollbar-width: thin;
+      width: 90%;
+      z-index: 2;
+    }
+
+    .rectangle-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 2.5vmin;
+      position: relative;
+      animation: fadeInRow 0.5s ease;
+    }
+
+    @keyframes fadeInRow {
+      from { opacity: 0; transform: translateY(1vmin); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Rectangles transformés en feuilles */
+    .rectangle {
+      width: 12vmin;
+      height: 8vmin;
+      min-width: 60px;
+      min-height: 40px;
+      background: linear-gradient(135deg, #228b22, #32cd32, #90ee90);
+      border: 0.5vmin solid #228b22;
+      border-radius: 50% 10% 50% 10%;
+      box-shadow: 
+        0 0.6vmin 1.2vmin rgba(34, 139, 34, 0.4), 
+        inset 0 0 15px rgba(144, 238, 144, 0.3),
+        inset 2px 2px 5px rgba(255, 255, 255, 0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+      backdrop-filter: blur(3px);
+      position: relative;
+    }
+
+    /* Nervure de la feuille */
+    .rectangle::before {
+      content: '';
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      width: 2px;
+      height: 80%;
+      background: linear-gradient(to bottom, #006400, #228b22);
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    /* Nervures secondaires */
+    .rectangle::after {
+      content: '';
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      width: 60%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #006400, transparent);
+      transform: translateX(-50%);
+      box-shadow: 0 20px 0 #006400, 0 -10px 0 #006400;
+      z-index: 1;
+    }
+
+    .rectangle:hover {
+      transform: scale(1.1) rotate(5deg);
+      border-color: #32cd32;
+      box-shadow: 
+        0 0.8vmin 1.6vmin rgba(34, 139, 34, 0.6), 
+        inset 0 0 25px rgba(144, 238, 144, 0.4),
+        0 0 20px rgba(50, 205, 50, 0.3);
+    }
+
+    .rectangle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+      border-radius: 50% 10% 50% 10%;
+      z-index: 2;
+      position: relative;
+    }
+
+    .row-number {
+      font-size: 3vmin;
+      font-weight: 600;
+      color: #32cd32;
+      position: absolute;
+      right: -5vmin;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(26, 76, 26, 0.8);
+      padding: 0.6vmin 1.2vmin;
+      border-radius: 2vmin;
+      border: 2px solid #32cd32;
+      box-shadow: 0 0 10px rgba(50, 205, 50, 0.5);
+      backdrop-filter: blur(5px);
+    }
+
+    .buttons {
+      position: fixed;
+      bottom: 10vmin;
+      display: flex;
+      justify-content: center;
+      gap: 2.5vmin;
+      z-index: 10;
+      width: 100%;
+      padding: 0 2.5vmin;
+      box-sizing: border-box;
+    }
+
+    .button {
+      padding: 2.5vmin 6vmin;
+      font-size: 3.2vmin;
+      font-weight: 500;
+      color: white;
+      background: linear-gradient(135deg, #228b22, #006400);
+      border: none;
+      border-radius: 1.2vmin;
+      box-shadow: 0 0.6vmin 1.8vmin rgba(34, 139, 34, 0.4);
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    /* Bouton Retour séparé en bas à gauche */
+    .return-button {
+      position: fixed;
+      bottom: 2vmin;
+      left: 2vmin;
+      padding: 2vmin 4vmin;
+      font-size: 2.8vmin;
+      font-weight: 500;
+      color: white;
+      background: linear-gradient(135deg, #ff6b35, #f7931e);
+      border: none;
+      border-radius: 1.2vmin;
+      box-shadow: 0 0.6vmin 1.8vmin rgba(255, 107, 53, 0.4);
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 1vmin;
+    }
+
+    .return-button:hover {
+      transform: translateY(-0.6vmin);
+      background: linear-gradient(135deg, #ff8c5a, #ffab40);
+      box-shadow: 0 1vmin 2.5vmin rgba(255, 107, 53, 0.6);
+    }
+
+    .button:hover {
+      transform: translateY(-0.6vmin);
+      background: linear-gradient(135deg, #32cd32, #228b22);
+      box-shadow: 0 1vmin 2.5vmin rgba(34, 139, 34, 0.6);
+    }
+
+    .button:disabled {
+      background: #4a5568;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 0 0.6vmin 1.8vmin rgba(0, 0, 0, 0.2);
+    }
+
+    .button-icon {
+      width: 4vmin;
+      height: 4vmin;
+    }
+
+    /* Style pour l'écran de restriction */
+    #restricted-screen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #1a4c1a, #2d5016);
+      color: #ffffff;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      z-index: 2000;
+      font-size: 4vmin;
+      padding: 5vmin;
+    }
+
+    #restricted-screen p {
+      margin: 2vmin 0;
+    }
+
+    #back-button {
+      margin-top: 5vmin;
+      padding: 2vmin 5vmin;
+      font-size: 3.5vmin;
+      color: white;
+      background: linear-gradient(135deg, #ff4d4d, #cc0000);
+      border: none;
+      border-radius: 1vmin;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    #back-button:hover {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 480px) {
+      .rectangle {
+        width: 14vmin;
+        height: 9vmin;
+        min-width: 55px;
+        min-height: 36px;
+      }
+      .button {
+        padding: 2.5vmin 4vmin;
+        font-size: 3.5vmin;
+      }
+      .return-button {
+        bottom: 1.5vmin;
+        left: 1.5vmin;
+        padding: 1.8vmin 3.5vmin;
+        font-size: 3vmin;
+      }
+      .logo {
+        width: 24vmin;
+        max-width: 120px;
+      }
+      .rectangle-container {
+        max-height: 50vh;
+        margin-top: 15vmin;
+      }
+      #alertBox {
+        font-size: 4vmin;
+        padding: 2.5vmin 4vmin;
+      }
+      .row-number {
+        font-size: 3.5vmin;
+        right: -2vmin;
+      }
+      .button-icon {
+        width: 4vmin;
+        height: 4vmin;
+      }
+      #restricted-screen {
+        font-size: 5vmin;
+      }
+      #back-button {
+        font-size: 4vmin;
+        padding: 2.5vmin 6vmin;
+      }
+    }
+
+    @media (min-width: 481px) and (max-width: 768px) {
+      .rectangle {
+        width: 13vmin;
+        height: 8.5vmin;
+        min-width: 60px;
+        min-height: 40px;
+      }
+      .button {
+        padding: 2.5vmin 5vmin;
+        font-size: 3vmin;
+      }
+      .return-button {
+        bottom: 1.8vmin;
+        left: 1.8vmin;
+        padding: 2vmin 4vmin;
+        font-size: 2.6vmin;
+      }
+      .logo {
+        width: 26.4vmin;
+        max-width: 144px;
+      }
+      .rectangle-container {
+        max-height: 55vh;
+      }
+      .button-icon {
+        width: 3.5vmin;
+        height: 3.5vmin;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .rectangle {
+        width: 11vmin;
+        height: 7vmin;
+        min-width: 70px;
+        min-height: 45px;
+      }
+      .button {
+        padding: 2vmin 6vmin;
+        font-size: 2.5vmin;
+        max-width: 220px;
+      }
+      .return-button {
+        bottom: 2.2vmin;
+        left: 2.2vmin;
+        padding: 2.2vmin 4.5vmin;
+        font-size: 2.4vmin;
+      }
+      .logo {
+        width: 24vmin;
+        max-width: 168px;
+      }
+      .rectangle-container {
+        max-height: 60vh;
+      }
+    }
+
+    @media (orientation: landscape) and (max-height: 500px) {
+      .rectangle-container {
+        max-height: 40vh;
+        margin-top: 12vmin;
+      }
+      .logo {
+        top: 1vmin;
+      }
+      #alertBox {
+        top: 10vmin;
+      }
+    }
+  </style>
+<link rel="stylesheet" href="/site/theme-neon.css">
+<link rel="stylesheet" href="/site/game-redesign.css">
+<script src="/site/particles.js" defer></script>
+</head>
+<body>
+  <!-- Particules de nature -->
+  <div class="nature-particle"></div>
+  <div class="nature-particle"></div>
+  <div class="nature-particle"></div>
+  
+  <!-- Créature de nature supplémentaire -->
+  <div class="nature-creature"></div>
+
+
+  <!-- Chargement initial -->
+  <div id="loading">
+    <div class="professional-loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- Alerte -->
+  <div id="alertBox">تم الوصول إلى الحد! اضغط على إعادة التعيين</div>
+
+  <!-- Chargement prédiction -->
+  <div id="prediction-loading" style="display: none;">
+    <div class="professional-loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- Contenu principal -->
+  <div id="content">
+    <img src="imago/logo.png" alt="Logo" class="logo">
+    <div class="rectangle-container" id="rectangleContainer">
+      <div class="rectangle-row">
+        <div class="rectangle" id="rectangle1"></div>
+        <div class="rectangle" id="rectangle2"></div>
+        <div class="rectangle" id="rectangle3"></div>
+        <div class="rectangle" id="rectangle4"></div>
+        <div class="rectangle" id="rectangle5"></div>
+        <span class="row-number">1</span>
+      </div>
+    </div>
+
+    <!-- Boutons principaux -->
+    <div class="buttons">
+      <button class="button" id="predictButton">
+        <svg class="button-icon" fill="white" viewBox="0 0 24 24"><path d="M12 4a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 110-12 6 6 0 010 12zm-1-7h2v4h-2zm0-3h2v2h-2z"/></svg>
+        التوقعات
+      </button>
+      <button class="button" id="resetButton">
+        <svg class="button-icon" fill="white" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 110 12 6 6 0 010-12h1z"/></svg>
+        إعادة التعيين
+      </button>
+    </div>
+
+    <!-- Bouton Retour séparé -->
+    <button class="return-button" id="returnButton">
+      <svg class="button-icon" fill="white" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      رجوع
+    </button>
+  </div>
+  <script src="../shared.js"></script>
+  <script src="crapaud.js"></script>
+</body>
+</html>

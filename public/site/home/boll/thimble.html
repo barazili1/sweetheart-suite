@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <script src="/site/host-unlock.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title id="page-title">Thimble Cassa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥛</text></svg>" type="image/x-icon">
+    <style>
+        /* Variables pour thème */
+        :root {
+            --primary-bg: #0a0a0a;
+            --secondary-bg: #1c2526;
+            --glow-color: #64b5f6;
+            --text-color: #ffffff;
+            --button-bg: #2563eb;
+            --button-hover: #3b82f6;
+            --alert-bg: #ef4444;
+        }
+
+        /* Style général */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            text-align: center;
+            background: linear-gradient(45deg, var(--primary-bg), var(--secondary-bg));
+            animation: gradientShift 12s ease-in-out infinite;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animation de l'arrière-plan avec dégradé fluide */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Animation des particules modernisée */
+        .background-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .background-animation::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, rgba(100, 181, 246, 0.15) 0%, transparent 70%),
+                        radial-gradient(circle at 70% 70%, rgba(100, 181, 246, 0.15) 0%, transparent 70%);
+            animation: subtleGlow 20s ease-in-out infinite;
+            opacity: 0.4;
+        }
+
+        @keyframes subtleGlow {
+            0% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 0.4; }
+        }
+
+        /* Particules dynamiques */
+        .particle {
+            position: absolute;
+            width: 0.4vmin;
+            height: 0.4vmin;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            z-index: 2;
+            animation: float 10s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 0.9;
+                transform: translateY(50vh) translateX(calc(10vw * var(--direction)));
+            }
+            100% {
+                transform: translateY(-10vh) translateX(calc(20vw * var(--direction)));
+                opacity: 0;
+            }
+        }
+
+        .logo {
+            margin: 20px 0;
+            max-width: 300px;
+            width: 100%;
+            filter: drop-shadow(0 0.2vmin 0.5vmin rgba(0, 0, 0, 0.4));
+            z-index: 3;
+        }
+
+        .table {
+            width: 700px;
+            height: 350px;
+            background: url('https://files.catbox.moe/hmqsjk.png') no-repeat center;
+            background-size: contain;
+            margin: 20px 0 0 0;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3;
+        }
+
+        .balls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: absolute;
+            top: 35%;
+            transform: translateY(-50%);
+            flex-wrap: wrap;
+        }
+
+        .ball-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        .ball-img {
+            max-width: 140px;
+            vertical-align: middle;
+            transition: transform 0.5s ease;
+            position: relative;
+            z-index: 4;
+        }
+
+        .ball-img.moved {
+            transform: translateY(-70px);
+        }
+
+        .ball-background {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90px;
+            height: 90px;
+            background: url('https://i.ibb.co/4nYXsKTz/Background-Eraser-20250504-230758425.png') no-repeat center;
+            background-size: contain;
+            z-index: 3;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .ball-img.moved + .ball-background {
+            opacity: 1;
+        }
+
+        .bet-options {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 0;
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        .bet-btn {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid #4a6078;
+            border-radius: 8px;
+            color: var(--text-color);
+            cursor: pointer;
+            width: 200px;
+            box-shadow: 0 0.2vmin 0.6vmin rgba(0, 0, 0, 0.3);
+            transition: box-shadow 0.2s ease, background 0.3s ease, transform 0.147014701470147s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            line-height: 1;
+            position: relative;
+        }
+
+        .bille1-btn {
+            background: linear-gradient(145deg, #ff6f61, #e65b50);
+        }
+
+        .billes2-btn {
+            background: linear-gradient(145deg, #6ab04c, #5b9a42);
+        }
+
+        .bet-btn:hover {
+            box-shadow: 0 0.4vmin 0.8vmin rgba(0, 0, 0, 0.3), 0 0 1vmin var(--glow-color);
+            transform: translateY(-2px);
+        }
+
+        .bet-btn:active {
+            box-shadow: 0 0.1vmin 0.3vmin rgba(0, 0, 0, 0.3);
+            transform: translateY(0);
+        }
+
+        .bet-btn[selected] {
+            box-shadow: 0 0.4vmin 0.8vmin rgba(0, 0, 0, 0.3), 0 0 1vmin var(--glow-color);
+            padding-left: 30px;
+        }
+
+        .bet-btn[selected]::before {
+            content: '•';
+            color: var(--text-color);
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+        }
+
+        .loader-container {
+            position: relative;
+            height: 40px;
+            margin: 0 auto;
+            z-index: 3;
+        }
+
+        .loader {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--button-bg);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        @keyframes spin {
+            0% { transform: translateX(-50%) rotate(0deg); }
+            100% { transform: translateX(-50%) rotate(360deg); }
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin: 0 0 20px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            top: -15px;
+            z-index: 3;
+        }
+
+        .buttons button {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(145deg, #34495e, #2c3e50);
+            border: 1px solid #4a6078;
+            border-radius: 8px;
+            color: var(--text-color);
+            cursor: pointer;
+            width: 120px;
+            box-shadow: 0 0.2vmin 0.6vmin rgba(0, 0, 0, 0.3);
+            transition: box-shadow 0.2s ease, background 0.3s ease, transform 0.1s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            line-height: 1;
+        }
+
+        #predictBtn {
+            background: linear-gradient(145deg, #1abc9c, #16a085);
+            width: 150px;
+            padding: 14px 28px;
+            font-size: 16px;
+        }
+
+        .buttons button:hover {
+            background: linear-gradient(145deg, #4a6078, #34495e);
+            box-shadow: 0 0.4vmin 0.8vmin rgba(0, 0, 0, 0.3), 0 0 1vmin var(--glow-color);
+            transform: translateY(-2px);
+        }
+
+        #predictBtn:hover {
+            background: linear-gradient(145deg, #16a085, #1abc9c);
+        }
+
+        .buttons button:active {
+            box-shadow: 0 0.1vmin 0.3vmin rgba(0, 0, 0, 0.3);
+            transform: translateY(0);
+        }
+
+        .buttons button:disabled {
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            opacity: 0.7;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(145deg, #2c3e50, #34495e);
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 0.2vmin 0.6vmin rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 10;
+            font-size: 16px;
+            color: var(--text-color);
+            max-width: 80%;
+            text-align: center;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: none;
+        }
+
+        /* Bouton Retour */
+        .back-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            border: 1px solid #4a6078;
+            border-radius: 8px;
+            color: var(--text-color);
+            cursor: pointer;
+            box-shadow: 0 0.2vmin 0.6vmin rgba(0, 0, 0, 0.3);
+            transition: box-shadow 0.2s ease, background 0.3s ease, transform 0.1s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            line-height: 1;
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            background: linear-gradient(145deg, #c0392b, #e74c3c);
+            box-shadow: 0 0.4vmin 0.8vmin rgba(0, 0, 0, 0.3), 0 0 1vmin var(--glow-color);
+            transform: translateY(-2px);
+        }
+
+        .back-button:active {
+            box-shadow: 0 0.1vmin 0.3vmin rgba(0, 0, 0, 0.3);
+            transform: translateY(0);
+        }
+
+        /* Media Queries pour responsivité */
+        @media (max-width: 600px) {
+            .balls { gap: 10px; top: 35%; }
+            .bet-options { gap: 10px; bottom: 10%; }
+            .buttons { gap: 10px; margin: 0 0 20px 10px; top: -50px; }
+            .bet-btn { font-size: 12px; width: 100px; padding: 10px 2px; }
+            .buttons button { font-size: 12px; width: 100px; height: 60px; padding: 10px 20px; }
+            #predictBtn { width: 120px; padding: 12px 24px; font-size: 14px; }
+            .loader-container { height: 29px; }
+            .loader { width: 30px; height: 30px; top: -90px; }
+            .notification { width: 80%; font-size: 14px; }
+            .table { width: 350px; height: 350px; margin: 20px 0 0 10px; }
+            .ball-img { max-width: 80px; }
+            .ball-background { width: 70px; height: 70px; }
+            .bet-options { margin: 0 0 0 10px; }
+            .back-button { bottom: 10px; left: 10px; padding: 10px 20px; font-size: 12px; }
+        }
+    </style>
+<link rel="stylesheet" href="/site/theme-neon.css">
+<link rel="stylesheet" href="/site/game-redesign.css">
+<script src="/site/particles.js" defer></script>
+</head>
+<body>
+    <div class="background-animation"></div>
+    <div class="notification" id="notification"></div>
+    <div class="overlay" id="overlay"></div>
+    <img src="https://i.ibb.co/392dYPC6/Background-Eraser-20250504-220257565.png" alt="Logo" class="logo">
+
+    <div class="table">
+        <div class="balls">
+            <div class="ball-container">
+                <img src="https://i.ibb.co/Rp6NvMHF/Background-Eraser-20250504-230906862.png" alt="Gobelet" class="ball-img" id="gobelet1">
+                <div class="ball-background"></div>
+            </div>
+            <div class="ball-container">
+                <img src="https://i.ibb.co/Rp6NvMHF/Background-Eraser-20250504-230906862.png" alt="Gobelet" class="ball-img" id="gobelet2">
+                <div class="ball-background"></div>
+            </div>
+            <div class="ball-container">
+                <img src="https://i.ibb.co/Rp6NvMHF/Background-Eraser-20250504-230906862.png" alt="Gobelet" class="ball-img" id="gobelet3">
+                <div class="ball-background"></div>
+            </div>
+        </div>
+        <div class="bet-options">
+            <button class="bet-btn bille1-btn" data-value="bille1" id="bille1-btn">كرة واحدة x2.91</button>
+            <button class="bet-btn billes2-btn" data-value="billes2" id="billes2-btn">كرتان x1.45</button>
+        </div>
+    </div>
+    <div class="loader-container">
+        <div class="loader" id="loader"></div>
+    </div>
+    <div class="buttons">
+        <button id="predictBtn">التوقع</button>
+    </div>
+    <button class="back-button" id="backButton">
+        <svg width="16" height="16" fill="white" viewBox="0 0 24 24" style="margin-right: 8px;">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+        <span id="back-button-text">رجوع</span>
+    </button>
+    <script src="../shared.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
