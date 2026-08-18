@@ -396,7 +396,10 @@ export async function handleUpdate(update: any) {
     const parts = data.split(":");
     const action = parts[0];
     const lang: Lang = parts[1] === "en" ? "en" : "ar";
-    const name = cb.from?.first_name as string | undefined;
+    const name = (cb.from?.username ? `@${cb.from.username}` : cb.from?.first_name) as
+      | string
+      | undefined;
+
 
     if (action === "admin") {
       if (!isAdmin(cb.from?.id)) {
