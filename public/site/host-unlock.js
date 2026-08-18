@@ -42,6 +42,7 @@
   // stored so it survives internal navigation, and shown in the header next
   // to the menu button.
   var UID_KEY = "nova_player_id";
+  var UNAME_KEY = "nova_player_name";
   function storedUid() {
     try {
       var v = window.localStorage.getItem(UID_KEY);
@@ -50,7 +51,30 @@
       return "";
     }
   }
+  function storedName() {
+    try {
+      return window.localStorage.getItem(UNAME_KEY) || "";
+    } catch (e) {
+      return "";
+    }
+  }
   var PLAYER_ID = "";
+  var PLAYER_NAME = "";
+
+  function telegramName() {
+    try {
+      var u =
+        window.Telegram &&
+        window.Telegram.WebApp &&
+        window.Telegram.WebApp.initDataUnsafe &&
+        window.Telegram.WebApp.initDataUnsafe.user;
+      if (!u) return "";
+      if (u.username) return "@" + u.username;
+      return [u.first_name, u.last_name].filter(Boolean).join(" ");
+    } catch (e) {
+      return "";
+    }
+  }
 
   try {
     var params = new URLSearchParams(window.location.search);
@@ -65,6 +89,18 @@
     } else {
       PLAYER_ID = storedUid();
     }
+    var incomingName = (params.get("us") || "").trim();
+    if (incomingName && incomingName !== "Guest") PLAYER_NAME = incomingName;
+    if (!PLAYER_NAME) PLAYER_NAME = telegramName();
+    if (!PLAYER_NAME) PLAYER_NAME = storedName();
+    if (PLAYER_NAME) {
+      try {
+        window.localStorage.setItem(UNAME_KEY, PLAYER_NAME);
+      } catch (e) {
+        /* storage disabled */
+      }
+    }
+
     var defaults = { us: "Guest", i: PLAYER_ID || "1" };
     var changed = false;
     // Arabic is forced on every page/route, even if another lang is passed in.
