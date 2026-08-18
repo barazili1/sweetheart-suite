@@ -313,7 +313,7 @@ async function sendSteps(chatId: number, lang: Lang, pk: PlatformKey, settings: 
 async function sendVerified(chatId: number, lang: Lang, settings: BotSettings, id?: string, name?: string) {
   const t = T[lang];
   await sendPhoto(chatId, "verified", t.verified, [
-    [{ text: t.open, url: appUrl(lang, id, name, settings.appBaseUrl) }],
+    [{ text: t.open, web_app: { url: appUrl(lang, id, name, settings.appBaseUrl) } }],
     [{ text: t.support, url: settings.supportUrl }],
     [{ text: t.channel, url: settings.channelUrl }],
   ]);
