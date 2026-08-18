@@ -72,7 +72,7 @@ const sendPhoto = async (
       form.append("caption", caption);
       form.append("parse_mode", "HTML");
       if (keyboard) form.append("reply_markup", JSON.stringify({ inline_keyboard: keyboard }));
-      form.append("photo", new Blob([bytes], { type: "image/jpeg" }), `${key}.jpg`);
+      form.append("photo", new Blob([bytes as unknown as BlobPart], { type: "image/jpeg" }), `${key}.jpg`);
       const res = await fetch(`${API}/bot${token()}/sendPhoto`, { method: "POST", body: form });
       const text = await res.text();
       const json = JSON.parse(text) as { ok: boolean; description?: string };
@@ -401,7 +401,7 @@ export async function handleUpdate(update: any) {
 
     if (action === "lang") {
       await answerCallback(cb.id);
-      await sendPhoto(chatId, images().steps, T[lang].platform, [
+      await sendPhoto(chatId, "steps", T[lang].platform, [
         [{ text: `🎯 ${PLATFORMS.p1.name}`, callback_data: `plat:${lang}:p1` }],
         [{ text: `🎯 ${PLATFORMS.p2.name}`, callback_data: `plat:${lang}:p2` }],
       ]);
@@ -456,8 +456,8 @@ export async function handleUpdate(update: any) {
 
   if (text.startsWith("/start")) {
     const name = msg.from?.first_name ?? "Player";
-    await sendPhoto(chatId, images().welcome, welcomeCaption(name));
-    await sendPhoto(chatId, images().language, LANG_CAPTION, [
+    await sendPhoto(chatId, "welcome", welcomeCaption(name));
+    await sendPhoto(chatId, "language", LANG_CAPTION, [
       [
         { text: "🇬🇧 English", callback_data: "lang:en" },
         { text: "🇸🇦 العربية", callback_data: "lang:ar" },
