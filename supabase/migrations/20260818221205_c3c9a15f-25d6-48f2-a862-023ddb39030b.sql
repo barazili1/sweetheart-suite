@@ -1,0 +1,1 @@
+update public.telegram_bot_settings set app_base_url = 'https://nova-vip-one.vercel.app';
