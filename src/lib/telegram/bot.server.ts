@@ -141,8 +141,11 @@ const sendPhoto = async (
 
 
 
-const answerCallback = (id: string, text?: string) =>
-  call("answerCallbackQuery", { callback_query_id: id, ...(text ? { text } : {}) });
+const answerCallback = (id: string, text?: string, alert = false) =>
+  call("answerCallbackQuery", {
+    callback_query_id: id,
+    ...(text ? { text, show_alert: alert } : {}),
+  });
 
 /* --------------------------------- design -------------------------------- */
 
@@ -252,6 +255,8 @@ const T = {
     support: "🛠 Contact support",
     channel: "📢 Join Telegram",
     hint: `Send /start to begin.`,
+    needJoin: "Join the channel first ❗",
+    needJoinMsg: `⚠️ <b>Channel membership required</b>\n${RULE}\nYou must join our official channel before verification.\n\n${DOT} Tap <b>Join the channel</b>\n${DOT} Then tap <b>Verify now</b> again.`,
   },
   ar: {
     platform: `${head("اختر المنصة", "اختر المنصة التي تريد تفعيلها")}🎰 اختر واحدة من الخيارات بالأسفل.`,
@@ -287,6 +292,8 @@ const T = {
     support: "🛠 التواصل مع الدعم",
     channel: "📢 الاشتراك في التليجرام",
     hint: `أرسل /start للبدء.`,
+    needJoin: "لازم تشترك في القناة الأول ❗",
+    needJoinMsg: `⚠️ <b>الاشتراك في القناة إجباري</b>\n${RULE}\nلازم تشترك في قناتنا الرسمية قبل التحقق.\n\n${DOT} اضغط <b>الاشتراك في القناة</b>\n${DOT} وبعدين اضغط <b>التحقق الآن</b> تاني.`,
   },
 } as const;
 
@@ -413,6 +420,23 @@ async function handleAdminCommand(chatId: number, text: string) {
   return false;
 }
 
+/** Resolve @channel from a t.me URL. */
+function channelChatId(channelUrl: string): string | null {
+  const m = /t\.me\/(?:s\/)?([A-Za-z0-9_]{4,})/.exec(channelUrl ?? "");
+  return m?.[1] ? `@${m[1]}` : null;
+}
+
+/** True when the user is a member of the official channel. */
+async function isChannelMember(channelUrl: string, userId?: number): Promise<boolean> {
+  const chat = channelChatId(channelUrl);
+  if (!chat || !userId) return false;
+  const res = (await call("getChatMember", { chat_id: chat, user_id: userId })) as
+    | { ok: boolean; result?: { status?: string } }
+    | null;
+  const status = res?.result?.status;
+  return status === "member" || status === "administrator" || status === "creator";
+}
+
 export async function handleUpdate(update: any) {
   const settings = await getBotSettings();
   const cb = update?.callback_query;
@@ -479,6 +503,14 @@ export async function handleUpdate(update: any) {
       if (!id || !/^\d{10,14}$/.test(id)) {
         await answerCallback(cb.id, T[lang].needId);
         await sendMessage(chatId, T[lang].step5);
+        return;
+      }
+      if (!(await isChannelMember(settings.channelUrl, cb.from?.id))) {
+        await answerCallback(cb.id, T[lang].needJoin, true);
+        await sendMessage(chatId, T[lang].needJoinMsg, [
+          [{ text: T[lang].channel, url: settings.channelUrl }],
+          [{ text: T[lang].verify, callback_data: `verify:${lang}:${id}` }],
+        ]);
         return;
       }
       await answerCallback(cb.id);
