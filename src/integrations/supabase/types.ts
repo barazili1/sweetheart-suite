@@ -14,42 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      telegram_bot_settings: {
-        Row: {
-          app_base_url: string | null
-          channel_url: string
-          enabled: boolean
-          id: number
-          platform_1_url: string
-          platform_2_url: string
-          promo_code: string
-          support_url: string
-          updated_at: string
-        }
-        Insert: {
-          app_base_url?: string | null
-          channel_url?: string
-          enabled?: boolean
-          id?: number
-          platform_1_url?: string
-          platform_2_url?: string
-          promo_code?: string
-          support_url?: string
-          updated_at?: string
-        }
-        Update: {
-          app_base_url?: string | null
-          channel_url?: string
-          enabled?: boolean
-          id?: number
-          platform_1_url?: string
-          platform_2_url?: string
-          promo_code?: string
-          support_url?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
