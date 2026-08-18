@@ -68,19 +68,16 @@ async function clearFlow(chat_id: number, keep?: number) {
   }
 }
 
-const sendMessage = async (chat_id: number, text: string, keyboard?: Btn[][], noTrack = false) =>
-  track(
+const sendMessage = async (chat_id: number, text: string, keyboard?: Btn[][], noTrack = false) => {
+  const res = await call("sendMessage", {
     chat_id,
-    await call("sendMessage", {
-      chat_id,
-      text,
-      parse_mode: "HTML",
-      link_preview_options: { is_disabled: true },
-      ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
-    }),
-  ) && undefined === undefined
-    ? undefined
-    : undefined;
+    text,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+    ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
+  });
+  return noTrack ? res : track(chat_id, res);
+};
 
 
 const uploadPhoto = async (
@@ -128,16 +125,19 @@ const sendPhoto = async (
   key: ImageKey,
   caption: string,
   keyboard?: Btn[][],
+  noTrack = false,
 ) => {
   if (caption.length <= CAPTION_LIMIT) {
     const res = await uploadPhoto(chat_id, key, caption, keyboard);
-    if (res && res.ok) return res;
-    return sendMessage(chat_id, caption, keyboard);
+    if (res && res.ok) return noTrack ? res : track(chat_id, res);
+    return sendMessage(chat_id, caption, keyboard, noTrack);
   }
   // Photo first (renders inline), then the full text + buttons underneath.
-  await uploadPhoto(chat_id, key, "");
-  return sendMessage(chat_id, caption, keyboard);
+  const photo = await uploadPhoto(chat_id, key, "");
+  if (!noTrack) track(chat_id, photo);
+  return sendMessage(chat_id, caption, keyboard, noTrack);
 };
+
 
 
 
