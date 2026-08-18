@@ -360,27 +360,32 @@
   }
 
   function renderIdChip() {
-    if (!PLAYER_ID) return;
     if (!PLAYER_NAME) PLAYER_NAME = telegramName() || storedName();
+    if (!PLAYER_ID) PLAYER_ID = storedUid();
+    if (!PLAYER_ID && !PLAYER_NAME) return;
     injectIdStyles();
     var anchor =
       document.getElementById("hamburgerBtn") ||
       document.querySelector(".hamburger-menu");
-    if (!anchor || !anchor.parentNode) return;
     var chip = document.getElementById("novaIdChip");
     if (!chip) {
       chip = document.createElement("div");
       chip.id = "novaIdChip";
       chip.className = "nova-id-chip";
       chip.setAttribute("title", "ID");
-      anchor.parentNode.insertBefore(chip, anchor);
-    } else if (chip.nextSibling !== anchor) {
-      anchor.parentNode.insertBefore(chip, anchor);
+    }
+    if (anchor && anchor.parentNode) {
+      chip.classList.remove("nova-id-float");
+      if (chip.nextSibling !== anchor) anchor.parentNode.insertBefore(chip, anchor);
+    } else if (!chip.parentNode) {
+      // No header anchor on this page: pin it so the player always sees it.
+      chip.classList.add("nova-id-float");
+      document.body.appendChild(chip);
     }
     var html =
       '<span class="nova-id-row"><span class="nova-id-dot"></span>ID ' +
       '<span class="nova-id-val">' +
-      PLAYER_ID +
+      (PLAYER_ID || "—") +
       "</span></span>" +
       (PLAYER_NAME
         ? '<span class="nova-id-user">👤 ' + esc(PLAYER_NAME) + "</span>"
@@ -388,10 +393,11 @@
     if (chip.innerHTML !== html) chip.innerHTML = html;
     // Also fill the built-in profile ID slot when present.
     var slot = document.getElementById("profileId");
-    if (slot && slot.textContent.indexOf(PLAYER_ID) === -1) {
+    if (slot && PLAYER_ID && slot.textContent.indexOf(PLAYER_ID) === -1) {
       slot.textContent = "ID: " + PLAYER_ID + (PLAYER_NAME ? " • " + PLAYER_NAME : "");
     }
   }
+
 
 
   function start() {
