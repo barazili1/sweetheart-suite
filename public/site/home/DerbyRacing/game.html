@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <script src="/site/host-unlock.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+  <title id="page-title">Derby Racing Predictor</title>
+  <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏇</text></svg>" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* === ARRIERE-PLAN COURSE === */
+    .race-bg {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+    /* Ciel */
+    .sky {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 35%;
+      background: linear-gradient(180deg, #1a8fc4 0%, #5bb8e0 40%, #a0d8ef 70%, #d4eef7 100%);
+    }
+    /* Nuages */
+    .cloud {
+      position: absolute;
+      background: rgba(255,255,255,0.85);
+      border-radius: 50%;
+      filter: blur(2px);
+    }
+    .cloud::before, .cloud::after {
+      content: '';
+      position: absolute;
+      background: rgba(255,255,255,0.85);
+      border-radius: 50%;
+    }
+    .cloud.c1 { width: 80px; height: 30px; top: 8%; left: 10%; animation: cloudDrift 25s linear infinite; }
+    .cloud.c1::before { width: 50px; height: 25px; top: -12px; left: 15px; }
+    .cloud.c1::after { width: 40px; height: 20px; top: -8px; left: 45px; }
+    .cloud.c2 { width: 100px; height: 35px; top: 5%; left: 55%; animation: cloudDrift 35s linear infinite reverse; }
+    .cloud.c2::before { width: 60px; height: 30px; top: -15px; left: 20px; }
+    .cloud.c2::after { width: 45px; height: 22px; top: -10px; left: 55px; }
+    .cloud.c3 { width: 60px; height: 22px; top: 15%; left: 80%; animation: cloudDrift 20s linear infinite; }
+    .cloud.c3::before { width: 35px; height: 18px; top: -10px; left: 10px; }
+    @keyframes cloudDrift {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100vw); }
+    }
+    /* Skyline ville */
+    .skyline {
+      position: absolute;
+      top: 22%; left: 0; right: 0;
+      height: 18%;
+      background:
+        linear-gradient(0deg, #4a6a5a 0%, transparent 100%),
+        repeating-linear-gradient(90deg,
+          transparent 0px, transparent 8px,
+          rgba(100,120,110,0.7) 8px, rgba(100,120,110,0.7) 12px,
+          transparent 12px, transparent 20px,
+          rgba(80,100,90,0.8) 20px, rgba(80,100,90,0.8) 26px,
+          transparent 26px, transparent 40px,
+          rgba(120,140,130,0.6) 40px, rgba(120,140,130,0.6) 48px,
+          transparent 48px, transparent 55px
+        );
+      opacity: 0.4;
+    }
+    /* Arbres / vegetation */
+    .treeline {
+      position: absolute;
+      top: 32%; left: 0; right: 0;
+      height: 8%;
+      background: linear-gradient(0deg, #2d5a1e 60%, #3d7a2e 80%, transparent 100%);
+    }
+    /* Piste sable */
+    .dirt-track {
+      position: absolute;
+      top: 38%; left: 0; right: 0;
+      height: 28%;
+      background: linear-gradient(180deg, #c4a862 0%, #d4b872 25%, #c8a45a 50%, #b89848 75%, #a08040 100%);
+    }
+    /* Lignes de piste */
+    .track-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 3px;
+      background: rgba(255,255,255,0.3);
+    }
+    .track-line.t1 { top: 45%; }
+    .track-line.t2 { top: 55%; }
+    /* Barrieres */
+    .fence {
+      position: absolute;
+      left: 0; right: 0;
+      height: 4px;
+      background: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .fence.f1 { top: 40%; }
+    .fence.f2 { top: 64%; }
+    .fence-post {
+      position: absolute;
+      width: 4px;
+      height: 25px;
+      background: #fff;
+      box-shadow: 1px 0 3px rgba(0,0,0,0.2);
+    }
+    /* Herbe bas */
+    .grass {
+      position: absolute;
+      top: 66%; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(180deg, #2e8b2e 0%, #267326 30%, #1f5f1f 70%, #184d18 100%);
+    }
+    /* Drapeau */
+    .flag-pole {
+      position: absolute;
+      top: 28%; right: 15%;
+      width: 3px; height: 60px;
+      background: #555;
+      z-index: 1;
+    }
+    .flag {
+      position: absolute;
+      top: 0; left: 3px;
+      width: 20px; height: 14px;
+      background: #f0c040;
+      clip-path: polygon(0 0, 100% 25%, 80% 50%, 100% 75%, 0 100%);
+      animation: wave 1.5s ease-in-out infinite;
+    }
+    @keyframes wave {
+      0%,100% { transform: skewY(0deg); }
+      50% { transform: skewY(-3deg); }
+    }
+
+    /* === CONTENU === */
+    #content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+      padding: 1.5rem 1rem;
+    }
+    .header {
+      text-align: center;
+      width: 100%;
+    }
+    .logo-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 0 auto 0.4rem;
+      text-shadow: 0 3px 8px rgba(0,0,0,0.6), 0 0 20px rgba(46,139,46,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .logo-emoji {
+      font-size: 32px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+    }
+    .subtitle {
+      color: #fff;
+      font-size: 0.92rem;
+      font-weight: 600;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      margin-bottom: 0.3rem;
+    }
+    .version {
+      display: inline-block;
+      background: linear-gradient(90deg, #2e8b2e, #f0c040);
+      color: #1a0800;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    /* === CERCLE === */
+    .print-signal {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 210px;
+      height: 210px;
+      background: rgba(0,40,20,0.75);
+      border: 5px solid #2e8b2e;
+      border-radius: 50%;
+      text-align: center;
+      transition: all 0.4s;
+      box-shadow: 0 0 30px rgba(46,139,46,0.35), inset 0 0 20px rgba(0,60,0,0.2);
+    }
+    .init-hint {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.75);
+      padding: 0 22px;
+      line-height: 1.7;
+    }
+    .signal-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+    .loading-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.9);
+      padding: 0 20px;
+      text-align: center;
+      animation: loadPulse 1s ease-in-out infinite;
+    }
+    @keyframes loadPulse {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 1; }
+    }
+    /* Cheval affiché */
+    .horse-result {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .horse-emoji {
+      font-size: 42px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+    .horse-color-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* === COUNTDOWN === */
+    .stop-signal-time {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 220px;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .stop-timer {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    .stop-progress {
+      width: 210px;
+      height: 12px;
+      background: linear-gradient(90deg, #2e8b2e 0%, #f0c040 100%) left / 0% 100% no-repeat rgba(0,0,0,0.3);
+      border-radius: 20px;
+    }
+    .deactivate {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      height: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    /* === BOUTONS === */
+    .button-game {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 260px;
+    }
+    .get-signal {
+      width: 100%;
+      height: 52px;
+      border: none;
+      background: linear-gradient(90deg, #2e8b2e 0%, #f0c040 100%);
+      border-radius: 30px;
+      color: #1a0800;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 20px rgba(46,139,46,0.45);
+    }
+    .get-signal:hover { transform: scale(1.02); box-shadow: 0 6px 28px rgba(46,139,46,0.6); }
+    .get-signal:active { transform: scale(0.97); }
+    .get-signal:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-back {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 120px;
+      height: 34px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 30px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.25); }
+    .btn-back:active { transform: scale(0.95); }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 400px) {
+      #content { padding: 1rem 0.7rem; }
+      .logo-title { font-size: 22px; }
+      .logo-emoji { font-size: 26px; }
+      .print-signal { width: 180px; height: 180px; }
+      .horse-emoji { font-size: 36px; }
+      .horse-color-name { font-size: 14px; }
+      .stop-progress { width: 180px; }
+      .button-game { max-width: 220px; gap: 8px; }
+      .get-signal { font-size: 14px; height: 46px; }
+    }
+    @media (max-width: 360px) {
+      #content { padding: 0.8rem 0.5rem; }
+      .logo-title { font-size: 18px; }
+      .logo-emoji { font-size: 22px; }
+      .print-signal { width: 160px; height: 160px; }
+      .horse-emoji { font-size: 30px; }
+      .horse-color-name { font-size: 12px; }
+      .stop-progress { width: 160px; }
+      .subtitle { font-size: 0.8rem; }
+      .get-signal { font-size: 13px; height: 42px; }
+    }
+  </style>
+<link rel="stylesheet" href="/site/theme-neon.css">
+<link rel="stylesheet" href="/site/game-redesign.css">
+<script src="/site/particles.js" defer></script>
+</head>
+<body>
+
+  <!-- Arriere-plan course -->
+  <div class="race-bg">
+    <div class="sky"></div>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+    <div class="skyline"></div>
+    <div class="treeline"></div>
+    <div class="dirt-track"></div>
+    <div class="track-line t1"></div>
+    <div class="track-line t2"></div>
+    <div class="fence f1"></div>
+    <div class="fence f2"></div>
+    <div class="grass"></div>
+    <div class="flag-pole"><div class="flag"></div></div>
+  </div>
+
+  <div id="content">
+    <div class="header">
+      <h1 class="logo-title"><span class="logo-emoji">🏇</span>DERBY RACING</h1>
+      <p class="subtitle" id="subtitle">توقع السباق</p>
+      <span class="version" id="version">Version 1.0</span>
+    </div>
+
+    <div class="print-signal" id="print-signal">
+      <span class="init-hint" id="init-text">اضغط على التوقع</span>
+    </div>
+
+    <div class="stop-signal-time deactivate" id="stop-block">
+      <p class="stop-timer" id="stop-timer"></p>
+      <div class="stop-progress" id="stop-progress"></div>
+    </div>
+
+    <div class="button-game">
+      <button class="get-signal" id="get-signal">التوقع</button>
+      <button class="btn-back" id="back-btn">← رجوع</button>
+    </div>
+  </div>
+
+  <script src="../shared.js"></script>
+  <script src="js.js"></script>
+</body>
+</html>

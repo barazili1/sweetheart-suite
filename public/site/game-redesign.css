@@ -1,0 +1,446 @@
+/* =====================================================================
+   Cassa Predictor — premium redesign layer (loaded after theme-neon.css)
+   Black glass + neon #90D600. Applies to home, games and crash pages.
+   ===================================================================== */
+
+:root {
+  --nz: #90d600;
+  --nz-hi: #c6ff4a;
+  --nz-lo: #4c7000;
+  --glass-bg: linear-gradient(160deg, rgba(144, 214, 0, 0.10), rgba(0, 0, 0, 0.72) 60%);
+  --glass-brd: 1px solid rgba(144, 214, 0, 0.30);
+  --glow-s: 0 0 18px rgba(144, 214, 0, 0.30);
+  --glow-l: 0 10px 40px rgba(144, 214, 0, 0.22), inset 0 1px 0 rgba(198, 255, 74, 0.25);
+  --r-lg: 22px;
+  --r-md: 16px;
+}
+
+/* Fixed black backdrop so the particle canvas always has contrast */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1000px 600px at 50% -10%, rgba(144, 214, 0, 0.14), transparent 70%),
+    radial-gradient(700px 500px at 100% 100%, rgba(144, 214, 0, 0.08), transparent 70%),
+    #000;
+}
+
+/* Every real content layer must sit above canvas (z-index:1) */
+.header,
+.container,
+.top-nav,
+.sidebar,
+.overlay,
+.games-grid,
+.app-container,
+.main-card,
+.predictor-section,
+.tabs-container,
+.search-container,
+.section-title,
+.back-to-top,
+.loading-overlay,
+.intro-animation {
+  position: relative;
+  z-index: 3;
+}
+
+/* Preserve the original viewport positioning. The generic content-layer rule
+   above must never turn navigation and overlays into normal document flow. */
+.top-nav {
+  position: fixed !important;
+  inset: 0 0 auto 0 !important;
+  width: 100% !important;
+}
+.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: auto !important;
+  height: 100dvh !important;
+}
+.overlay,
+.loading-overlay,
+.intro-animation {
+  position: fixed !important;
+  inset: 0 !important;
+}
+.back-to-top {
+  position: fixed !important;
+}
+.sidebar,
+.overlay,
+.loading-overlay,
+.intro-animation,
+.back-to-top {
+  z-index: 10050 !important;
+}
+
+@media (max-width: 600px) {
+  .top-nav {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-height: 66px !important;
+    padding: 10px 12px !important;
+  }
+
+  .brand-section {
+    min-width: 0 !important;
+    gap: 9px !important;
+  }
+
+  .brand-logo {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    padding: 0 !important;
+    border-radius: 12px !important;
+    flex: 0 0 38px !important;
+  }
+
+  .brand-name {
+    min-width: 0 !important;
+    max-width: 145px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: 17px !important;
+    letter-spacing: 0 !important;
+  }
+
+  .profile-section {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+  }
+
+  .profile-btn {
+    display: none !important;
+  }
+
+  .nova-id-chip {
+    max-width: 124px !important;
+    margin: 0 !important;
+    padding: 5px 8px !important;
+    overflow: hidden !important;
+    font-size: 9px !important;
+  }
+
+  .nova-id-chip .nova-id-val {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .hamburger-menu {
+    width: 42px !important;
+    height: 42px !important;
+    padding: 8px !important;
+    flex: 0 0 42px !important;
+    border-radius: 12px !important;
+  }
+
+  .sidebar {
+    width: min(82vw, 320px) !important;
+    right: min(-82vw, -320px) !important;
+    overflow-y: auto !important;
+  }
+
+  .sidebar.active {
+    right: 0 !important;
+  }
+
+  .sidebar-header,
+  .sidebar-menu {
+    padding: 20px !important;
+  }
+}
+
+/* ---------------- Header / branding ---------------- */
+.header {
+  padding: 1.6rem 1rem 1rem !important;
+}
+.logo-icon,
+.app-logo,
+.brand-logo {
+  font-family: "Orbitron", monospace !important;
+  background: linear-gradient(140deg, #c6ff4a, #90d600 55%, #4c7000) !important;
+  color: #060a00 !important;
+  border-radius: 16px !important;
+  padding: 0.45rem 1.1rem !important;
+  box-shadow: 0 8px 26px rgba(144, 214, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  border: none !important;
+}
+.logo,
+.app-title,
+.brand-name,
+.predictor-title {
+  font-family: "Orbitron", monospace !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase;
+}
+.subtitle {
+  color: rgba(255, 255, 255, 0.62) !important;
+  letter-spacing: 0.6px;
+}
+.version {
+  background: rgba(144, 214, 0, 0.10) !important;
+  color: var(--nz) !important;
+  border: 1px solid rgba(144, 214, 0, 0.35) !important;
+  box-shadow: none !important;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-size: 0.7rem !important;
+  padding: 0.3rem 0.8rem !important;
+}
+
+/* ---------------- Prediction circle ---------------- */
+.print-signal,
+.prediction-circle,
+.circle-content {
+  position: relative;
+  border: none !important;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(144, 214, 0, 0.16), rgba(0, 0, 0, 0.92) 62%) !important;
+  box-shadow:
+    0 0 0 1px rgba(144, 214, 0, 0.35),
+    0 0 42px rgba(144, 214, 0, 0.28),
+    inset 0 0 60px rgba(144, 214, 0, 0.10) !important;
+  backdrop-filter: blur(6px);
+}
+.print-signal::before,
+.prediction-circle::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--nz);
+  border-right-color: rgba(144, 214, 0, 0.25);
+  animation: nzSpin 4.5s linear infinite;
+  pointer-events: none;
+}
+.print-signal::after,
+.prediction-circle::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 1px dashed rgba(144, 214, 0, 0.20);
+  animation: nzSpin 18s linear infinite reverse;
+  pointer-events: none;
+}
+@keyframes nzSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.signal-value,
+.signal-label,
+#init-text {
+  position: relative;
+  z-index: 2;
+}
+.signal-value {
+  color: #fff !important;
+  text-shadow: 0 0 22px rgba(144, 214, 0, 0.65) !important;
+}
+.signal-label {
+  color: var(--nz) !important;
+  letter-spacing: 2px !important;
+}
+
+/* ---------------- Buttons ---------------- */
+.button-game,
+.btn-primary,
+.profile-btn {
+  position: relative;
+  overflow: hidden;
+  border: none !important;
+  border-radius: 999px !important;
+  background: linear-gradient(120deg, #4c7000, #90d600 45%, #c6ff4a) !important;
+  color: #050a00 !important;
+  font-weight: 800 !important;
+  letter-spacing: 1.4px !important;
+  box-shadow: 0 10px 30px rgba(144, 214, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease !important;
+}
+.button-game::after,
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  animation: nzSheen 3.2s ease-in-out infinite;
+}
+@keyframes nzSheen {
+  0% {
+    left: -60%;
+  }
+  60%,
+  100% {
+    left: 130%;
+  }
+}
+.button-game:active,
+.btn-primary:active {
+  transform: scale(0.98);
+}
+.button-game:hover,
+.btn-primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 14px 40px rgba(144, 214, 0, 0.5) !important;
+}
+.button-game:disabled {
+  filter: grayscale(0.6) brightness(0.7);
+  box-shadow: none !important;
+}
+.btn-secondary,
+.back-btn {
+  border-radius: 999px !important;
+  background: rgba(144, 214, 0, 0.06) !important;
+  border: 1px solid rgba(144, 214, 0, 0.28) !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+  letter-spacing: 1px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.btn-secondary:hover,
+.back-btn:hover {
+  background: rgba(144, 214, 0, 0.14) !important;
+  color: #fff !important;
+  border-color: var(--nz) !important;
+}
+
+/* ---------------- Countdown / progress ---------------- */
+.stop-block {
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--glass-bg) !important;
+  border: var(--glass-brd);
+  box-shadow: var(--glow-s);
+}
+.stop-timer {
+  font-family: "Orbitron", monospace;
+  color: var(--nz) !important;
+  letter-spacing: 1.5px;
+}
+.stop-progress {
+  height: 8px !important;
+  border-radius: 999px !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  background-image: linear-gradient(90deg, #4c7000, #90d600 60%, #c6ff4a) !important;
+  box-shadow: 0 0 16px rgba(144, 214, 0, 0.45);
+}
+
+/* ---------------- Cards (home grid + crash panels) ---------------- */
+.main-card,
+.predictor-section,
+.game-card,
+.card,
+.games-grid > * {
+  border-radius: var(--r-lg) !important;
+  background: var(--glass-bg) !important;
+  border: var(--glass-brd) !important;
+  box-shadow: var(--glow-l) !important;
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.game-card:hover,
+.games-grid > *:hover {
+  transform: translateY(-4px);
+  border-color: var(--nz) !important;
+  box-shadow: 0 18px 50px rgba(144, 214, 0, 0.32) !important;
+}
+.games-grid > * img,
+.game-card img {
+  border-radius: 14px;
+  filter: saturate(1.05) contrast(1.05);
+}
+
+/* ---------------- Nav / sidebar / tabs / search ---------------- */
+.top-nav {
+  background: rgba(0, 0, 0, 0.72) !important;
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(144, 214, 0, 0.22) !important;
+}
+.sidebar {
+  background: linear-gradient(180deg, rgba(9, 14, 4, 0.98), rgba(0, 0, 0, 0.98)) !important;
+  border-right: 1px solid rgba(144, 214, 0, 0.25) !important;
+}
+.sidebar-menu a,
+.sidebar-menu li {
+  border-radius: 12px;
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar-menu a:hover {
+  background: rgba(144, 214, 0, 0.12);
+  color: var(--nz);
+}
+.tab-btn {
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(144, 214, 0, 0.18) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  letter-spacing: 0.6px;
+}
+.tab-btn.active {
+  background: linear-gradient(120deg, #90d600, #c6ff4a) !important;
+  color: #050a00 !important;
+  border-color: transparent !important;
+  box-shadow: 0 6px 20px rgba(144, 214, 0, 0.35) !important;
+}
+.search-input {
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(144, 214, 0, 0.22) !important;
+  color: #fff !important;
+}
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+.search-input:focus {
+  outline: none !important;
+  border-color: var(--nz) !important;
+  box-shadow: 0 0 0 3px rgba(144, 214, 0, 0.18) !important;
+}
+.section-title {
+  font-family: "Orbitron", monospace !important;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.section-title::after {
+  content: "";
+  display: block;
+  width: 54px;
+  height: 3px;
+  margin-top: 8px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--nz), transparent);
+}
+.profile-avatar {
+  border: 2px solid rgba(144, 214, 0, 0.5) !important;
+  box-shadow: var(--glow-s);
+}
+.loading-spinner {
+  border-color: rgba(144, 214, 0, 0.2) !important;
+  border-top-color: var(--nz) !important;
+}
+.loading-dot {
+  background: var(--nz) !important;
+  box-shadow: 0 0 12px rgba(144, 214, 0, 0.6);
+}
+.back-to-top {
+  background: linear-gradient(120deg, #90d600, #c6ff4a) !important;
+  color: #050a00 !important;
+  box-shadow: 0 8px 26px rgba(144, 214, 0, 0.4) !important;
+}

@@ -1,0 +1,388 @@
+/* =====================================================================
+   Cassa Predictor — global neon theme override (black + #90D600)
+   Loaded last in <head> of every page so it wins over inline styles.
+   ===================================================================== */
+:root {
+  --neon: #90d600;
+  --neon-dim: #6ea300;
+  --neon-soft: rgba(144, 214, 0, 0.18);
+  --neon-line: rgba(144, 214, 0, 0.35);
+  --ink: #000000;
+  --ink-2: #070b04;
+  --ink-3: #0d1408;
+
+  /* Remap every palette variable used by the original pages */
+  --primary: #90d600 !important;
+  --primary-dark: #6ea300 !important;
+  --secondary: #4d7300 !important;
+  --accent: #b6ff26 !important;
+  --success: #90d600 !important;
+  --warning: #b6ff26 !important;
+  --danger: #ff4d4d !important;
+  --dark: #000000 !important;
+  --light: #ffffff !important;
+  --glass: rgba(144, 214, 0, 0.06) !important;
+  --glass-border: rgba(144, 214, 0, 0.28) !important;
+  --text-primary: #ffffff !important;
+  --text-secondary: rgba(255, 255, 255, 0.72) !important;
+}
+
+html {
+  background: #000 !important;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+
+body {
+  background: transparent !important;
+  color: #fff;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-x: none;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+img, video, canvas:not(#neon-particles), iframe {
+  max-width: 100% !important;
+}
+
+/* Kill the original decorative background layers so the particle field shows */
+.game-bg,
+.game-bg::before,
+.background,
+.animated-bg,
+.animated-bg::before,
+.bg-animation,
+.bg-gradient,
+.cosmic-bg,
+.grid-bg,
+.stars,
+.star,
+.particles,
+.particle,
+.orb,
+.glow-orb,
+.shape,
+.floating-shapes {
+  background: transparent !important;
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+/* Neon particle canvas layer */
+#neon-particles {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100vh !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+  display: block !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  mix-blend-mode: screen;
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .top-nav {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .container,
+  .app-container,
+  .main-card,
+  .predictor-section,
+  .games-grid,
+  .tabs-container,
+  .search-container {
+    max-width: calc(100vw - 24px) !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .top-nav,
+  .header,
+  .header-bar {
+    max-width: 100vw !important;
+  }
+
+  .games-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  button, .btn, .button, .button-game, input, select, textarea {
+    max-width: 100% !important;
+  }
+}
+
+/* ---------- Typography / logos ---------- */
+h1, h2, h3, .logo, .title, .page-title, .game-title, .signal-value, .value {
+  letter-spacing: 0.5px;
+}
+
+.logo,
+.logo-text,
+.brand,
+.title-gradient {
+  background: linear-gradient(135deg, #b6ff26, #90d600 45%, #5f8f00) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  text-shadow: none !important;
+}
+
+.logo-icon,
+.version,
+.badge,
+.tag,
+.pill,
+.chip,
+.label-pill {
+  background: linear-gradient(135deg, #90d600, #6ea300) !important;
+  color: #050a00 !important;
+  border: 1px solid rgba(144, 214, 0, 0.5) !important;
+  box-shadow: 0 0 18px rgba(144, 214, 0, 0.35) !important;
+  text-shadow: none !important;
+}
+
+/* ---------- Cards / panels / glass surfaces ---------- */
+.card,
+.game-card,
+.glass,
+.glass-card,
+.panel,
+.box,
+.stat,
+.stat-card,
+.tile,
+.item,
+.menu,
+.side-menu,
+.modal,
+.modal-content,
+.popup,
+.popup-content,
+.terms-content,
+.sheet,
+.dropdown {
+  background: linear-gradient(160deg, rgba(144, 214, 0, 0.07), rgba(0, 0, 0, 0.85)) !important;
+  border: 1px solid rgba(144, 214, 0, 0.28) !important;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.65), 0 0 22px rgba(144, 214, 0, 0.12) !important;
+  backdrop-filter: blur(10px);
+  color: #fff;
+}
+
+.card:hover,
+.game-card:hover,
+.tile:hover,
+.item:hover {
+  border-color: rgba(144, 214, 0, 0.75) !important;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.7), 0 0 34px rgba(144, 214, 0, 0.3) !important;
+  transform: translateY(-3px);
+}
+
+/* ---------- Prediction circle (games) ---------- */
+.print-signal,
+.signal-circle,
+.circle,
+.prediction-circle {
+  border-color: #90d600 !important;
+  background: radial-gradient(circle at 50% 40%, rgba(144, 214, 0, 0.14), #000 70%) !important;
+  box-shadow: 0 0 55px rgba(144, 214, 0, 0.3), inset 0 0 42px rgba(144, 214, 0, 0.14) !important;
+  color: #fff !important;
+}
+
+.signal-value,
+.value,
+.result,
+.coefficient,
+.multiplier {
+  color: #b6ff26 !important;
+  text-shadow: 0 0 18px rgba(144, 214, 0, 0.55) !important;
+}
+
+/* ---------- Buttons ---------- */
+button,
+.btn,
+.button,
+.button-game,
+.cta,
+input[type="submit"],
+a.button {
+  background: linear-gradient(135deg, #90d600, #6ea300) !important;
+  color: #050a00 !important;
+  border: 1px solid rgba(182, 255, 38, 0.55) !important;
+  box-shadow: 0 6px 26px rgba(144, 214, 0, 0.28) !important;
+  text-shadow: none !important;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+button:hover,
+.btn:hover,
+.button:hover,
+.button-game:hover,
+.cta:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 12px 38px rgba(144, 214, 0, 0.45) !important;
+}
+
+button:disabled,
+.button-game:disabled {
+  filter: grayscale(0.5);
+  opacity: 0.45 !important;
+  transform: none !important;
+}
+
+/* Ghost / back buttons stay quiet */
+.back-btn,
+.back,
+.btn-ghost,
+.close,
+.close-btn,
+.menu-toggle,
+.hamburger,
+.icon-btn {
+  background: transparent !important;
+  color: rgba(144, 214, 0, 0.85) !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.back-btn:hover,
+.close:hover,
+.menu-toggle:hover,
+.icon-btn:hover {
+  color: #b6ff26 !important;
+  filter: drop-shadow(0 0 8px rgba(144, 214, 0, 0.6));
+}
+
+/* ---------- Progress / bars / tabs ---------- */
+.stop-progress,
+.progress,
+.progress-bar,
+.bar {
+  background-color: rgba(144, 214, 0, 0.14) !important;
+  background-image: linear-gradient(90deg, #90d600, #b6ff26) !important;
+  box-shadow: 0 0 14px rgba(144, 214, 0, 0.35) !important;
+}
+
+.tab,
+.filter,
+.category {
+  border: 1px solid rgba(144, 214, 0, 0.3) !important;
+  color: #cfe9a3 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  box-shadow: none !important;
+}
+
+.tab.active,
+.filter.active,
+.category.active,
+.tab-active {
+  background: linear-gradient(135deg, #90d600, #6ea300) !important;
+  color: #050a00 !important;
+  box-shadow: 0 0 20px rgba(144, 214, 0, 0.4) !important;
+}
+
+/* ---------- Links, icons, inputs ---------- */
+a {
+  color: #b6ff26;
+}
+a:hover {
+  color: #d3ff6b;
+}
+
+i, .fa, .fas, .far, .fab {
+  color: inherit;
+}
+
+input, select, textarea {
+  background: rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(144, 214, 0, 0.3) !important;
+  color: #fff !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: #90d600 !important;
+  box-shadow: 0 0 0 3px rgba(144, 214, 0, 0.18) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(#90d600, #4d7300);
+  border-radius: 8px;
+}
+
+::selection {
+  background: rgba(144, 214, 0, 0.35);
+  color: #fff;
+}
+
+/* ---------- Dark surfaces that used the old navy (#0a0e27) ---------- */
+.intro-animation,
+.loading-overlay,
+.sidebar,
+.side-panel,
+.top-nav,
+.bottom-nav,
+.footer,
+.header-bar {
+  background: linear-gradient(160deg, rgba(144, 214, 0, 0.06), rgba(0, 0, 0, 0.94)) !important;
+  border-color: rgba(144, 214, 0, 0.22) !important;
+  color: #fff;
+}
+
+.overlay,
+.backdrop {
+  background: rgba(0, 0, 0, 0.82) !important;
+}
+
+.game-type,
+.game-tag,
+.game-provider,
+.game-category {
+  background: rgba(144, 214, 0, 0.12) !important;
+  border: 1px solid rgba(144, 214, 0, 0.3) !important;
+  color: #cfe9a3 !important;
+}
+
+.section-title,
+.section-title::after {
+  color: #b6ff26 !important;
+}
+.section-title::after {
+  background: linear-gradient(90deg, transparent, #90d600, transparent) !important;
+}
+
+.loading-spinner::before,
+.loading-spinner::after {
+  border-top-color: #90d600 !important;
+  border-color: rgba(144, 214, 0, 0.25) !important;
+  border-top: 3px solid #90d600 !important;
+}
+
+.sidebar-menu a {
+  color: #d9f0b0 !important;
+}
+.sidebar-menu a:hover {
+  color: #b6ff26 !important;
+  background: rgba(144, 214, 0, 0.1) !important;
+}

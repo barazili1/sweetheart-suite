@@ -1,24 +1,29 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
-});
+  head: () => ({
+    meta: [
+      { title: "Cassa Predictor — Pronostics de jeux crash" },
+      {
+        name: "description",
+        content:
+          "Cassa Predictor : pronostics et signaux en temps réel pour Aviator, JetX, Chicken Run, Lucky Jet et autres jeux crash.",
+      },
+      { property: "og:title", content: "Cassa Predictor — Pronostics de jeux crash" },
+      {
+        property: "og:description",
+        content:
+          "Pronostics et signaux en temps réel pour les jeux crash les plus populaires.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  beforeLoad: () => {
+    // The original app is launched from its Telegram bot, which passes the
+    // interface language. Arabic is forced everywhere.
+    throw redirect({ href: "/site/index.html?lang=ar&us=Guest&i=1" });
+  },
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
+  component: () => null,
+});
