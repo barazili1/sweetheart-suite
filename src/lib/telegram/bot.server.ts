@@ -343,7 +343,7 @@ async function sendVerified(chatId: number, lang: Lang, settings: BotSettings, i
     [{ text: t.open, web_app: { url: appUrl(lang, id, name, settings.appBaseUrl) } }],
     [{ text: t.support, url: settings.supportUrl }],
     [{ text: t.channel, url: settings.channelUrl }],
-  ]);
+  ], true);
 }
 
 
@@ -512,7 +512,8 @@ export async function handleUpdate(update: any) {
 
   if (text.startsWith("/start")) {
     const name = msg.from?.first_name ?? "Player";
-    await sendPhoto(chatId, "welcome", welcomeCaption(name));
+    flowMessages.delete(chatId);
+    await sendPhoto(chatId, "welcome", welcomeCaption(name), undefined, true);
     await sendPhoto(chatId, "language", LANG_CAPTION, [
       [
         { text: "🇬🇧 English", callback_data: "lang:en" },
