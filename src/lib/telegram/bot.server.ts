@@ -56,7 +56,7 @@ const sendMessage = (chat_id: number, text: string, keyboard?: Btn[][]) =>
     ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
 
-const sendPhoto = async (
+const uploadPhoto = async (
   chat_id: number,
   key: ImageKey,
   caption: string,
@@ -64,13 +64,15 @@ const sendPhoto = async (
 ) => {
   const bytes = imageBytes(key);
   // Upload the bytes directly: Telegram never has to reach our host, so images
-  // always arrive even when the deployment is auth-gated.
+  // always arrive (and render inline, no download needed).
   if (bytes) {
     try {
       const form = new FormData();
       form.append("chat_id", String(chat_id));
-      form.append("caption", caption);
-      form.append("parse_mode", "HTML");
+      if (caption) {
+        form.append("caption", caption);
+        form.append("parse_mode", "HTML");
+      }
       if (keyboard) form.append("reply_markup", JSON.stringify({ inline_keyboard: keyboard }));
       form.append("photo", new Blob([bytes as unknown as BlobPart], { type: "image/jpeg" }), `${key}.jpg`);
       const res = await fetch(`${API}/bot${token()}/sendPhoto`, { method: "POST", body: form });
@@ -82,17 +84,34 @@ const sendPhoto = async (
       console.error("Telegram sendPhoto upload threw", error);
     }
   }
-  // Fallbacks: remote URL, then plain text with the same buttons.
-  const res = await call("sendPhoto", {
+  // Fallback: let Telegram fetch the hosted copy.
+  return call("sendPhoto", {
     chat_id,
     photo: images()[key],
-    caption,
-    parse_mode: "HTML",
+    ...(caption ? { caption, parse_mode: "HTML" } : {}),
     ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
-  if (!res || !res.ok) return sendMessage(chat_id, caption, keyboard);
-  return res;
 };
+
+/** Telegram caption limit is 1024 chars — longer copy goes in its own message. */
+const CAPTION_LIMIT = 1000;
+
+const sendPhoto = async (
+  chat_id: number,
+  key: ImageKey,
+  caption: string,
+  keyboard?: Btn[][],
+) => {
+  if (caption.length <= CAPTION_LIMIT) {
+    const res = await uploadPhoto(chat_id, key, caption, keyboard);
+    if (res && res.ok) return res;
+    return sendMessage(chat_id, caption, keyboard);
+  }
+  // Photo first (renders inline), then the full text + buttons underneath.
+  await uploadPhoto(chat_id, key, "");
+  return sendMessage(chat_id, caption, keyboard);
+};
+
 
 
 const answerCallback = (id: string, text?: string) =>
