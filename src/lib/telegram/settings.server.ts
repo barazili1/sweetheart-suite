@@ -41,15 +41,15 @@ export async function getBotSettings(): Promise<BotSettings> {
 
   const row = data as Record<string, any>;
   return {
-    enabled: row.enabled,
-    channelUrl: row.channel_url,
-    supportUrl: row.support_url,
-    platform1Url: row.platform_1_url,
-    platform2Url: row.platform_2_url,
-    platform3Url: row.platform_3_url ?? PLATFORMS.p3.download,
-    platform4Url: row.platform_4_url ?? PLATFORMS.p4.download,
-    promoCode: row.promo_code,
-    appBaseUrl: row.app_base_url,
+    enabled: row["enabled"],
+    channelUrl: row["channel_url"],
+    supportUrl: row["support_url"],
+    platform1Url: row["platform_1_url"],
+    platform2Url: row["platform_2_url"],
+    platform3Url: row["platform_3_url"] ?? PLATFORMS.p3.download,
+    platform4Url: row["platform_4_url"] ?? PLATFORMS.p4.download,
+    promoCode: row["promo_code"],
+    appBaseUrl: row["app_base_url"],
   };
 }
 
