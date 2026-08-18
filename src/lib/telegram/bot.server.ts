@@ -454,6 +454,7 @@ export async function handleUpdate(update: any) {
 
     if (action === "lang") {
       await answerCallback(cb.id);
+      await clearFlow(chatId);
       await sendPhoto(chatId, "steps", T[lang].platform, [
         [{ text: `🎯 ${PLATFORMS.p1.name}`, callback_data: `plat:${lang}:p1` }],
         [{ text: `🎯 ${PLATFORMS.p2.name}`, callback_data: `plat:${lang}:p2` }],
@@ -463,6 +464,7 @@ export async function handleUpdate(update: any) {
     if (action === "plat") {
       const pk = (parts[2] === "p2" ? "p2" : "p1") as PlatformKey;
       await answerCallback(cb.id);
+      await clearFlow(chatId);
       await sendSteps(chatId, lang, pk, settings);
       return;
     }
@@ -480,8 +482,7 @@ export async function handleUpdate(update: any) {
         return;
       }
       await answerCallback(cb.id);
-      // Wipe the flow messages (language, steps, ID prompts) — keep only the
-      // welcome message and the verified card below.
+      // Wipe every previous flow message — only the verified card stays.
       await clearFlow(chatId);
       await sendVerified(chatId, lang, settings, id, name);
       return;
@@ -513,7 +514,7 @@ export async function handleUpdate(update: any) {
   if (text.startsWith("/start")) {
     const name = msg.from?.first_name ?? "Player";
     flowMessages.delete(chatId);
-    await sendPhoto(chatId, "welcome", welcomeCaption(name), undefined, true);
+    await sendPhoto(chatId, "welcome", welcomeCaption(name));
     await sendPhoto(chatId, "language", LANG_CAPTION, [
       [
         { text: "🇬🇧 English", callback_data: "lang:en" },

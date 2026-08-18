@@ -347,8 +347,11 @@
       "opacity:.9;max-width:130px;overflow:hidden;text-overflow:ellipsis}" +
       "@keyframes novaIdGlow{0%,100%{box-shadow:0 0 10px rgba(144,214,0,.25)}" +
       "50%{box-shadow:0 0 22px rgba(144,214,0,.55)}}" +
+      ".nova-id-chip.nova-id-float{position:fixed;top:10px;left:10px;z-index:99999;" +
+      "margin:0;background:rgba(8,12,4,.88)}" +
       "@media(max-width:480px){.nova-id-chip{font-size:10px;padding:5px 9px;margin-right:6px}" +
       ".nova-id-chip .nova-id-user{font-size:9px;max-width:96px}}";
+
     document.head.appendChild(st);
   }
 
@@ -360,27 +363,32 @@
   }
 
   function renderIdChip() {
-    if (!PLAYER_ID) return;
     if (!PLAYER_NAME) PLAYER_NAME = telegramName() || storedName();
+    if (!PLAYER_ID) PLAYER_ID = storedUid();
+    if (!PLAYER_ID && !PLAYER_NAME) return;
     injectIdStyles();
     var anchor =
       document.getElementById("hamburgerBtn") ||
       document.querySelector(".hamburger-menu");
-    if (!anchor || !anchor.parentNode) return;
     var chip = document.getElementById("novaIdChip");
     if (!chip) {
       chip = document.createElement("div");
       chip.id = "novaIdChip";
       chip.className = "nova-id-chip";
       chip.setAttribute("title", "ID");
-      anchor.parentNode.insertBefore(chip, anchor);
-    } else if (chip.nextSibling !== anchor) {
-      anchor.parentNode.insertBefore(chip, anchor);
+    }
+    if (anchor && anchor.parentNode) {
+      chip.classList.remove("nova-id-float");
+      if (chip.nextSibling !== anchor) anchor.parentNode.insertBefore(chip, anchor);
+    } else if (!chip.parentNode) {
+      // No header anchor on this page: pin it so the player always sees it.
+      chip.classList.add("nova-id-float");
+      document.body.appendChild(chip);
     }
     var html =
       '<span class="nova-id-row"><span class="nova-id-dot"></span>ID ' +
       '<span class="nova-id-val">' +
-      PLAYER_ID +
+      (PLAYER_ID || "—") +
       "</span></span>" +
       (PLAYER_NAME
         ? '<span class="nova-id-user">👤 ' + esc(PLAYER_NAME) + "</span>"
@@ -388,10 +396,11 @@
     if (chip.innerHTML !== html) chip.innerHTML = html;
     // Also fill the built-in profile ID slot when present.
     var slot = document.getElementById("profileId");
-    if (slot && slot.textContent.indexOf(PLAYER_ID) === -1) {
+    if (slot && PLAYER_ID && slot.textContent.indexOf(PLAYER_ID) === -1) {
       slot.textContent = "ID: " + PLAYER_ID + (PLAYER_NAME ? " • " + PLAYER_NAME : "");
     }
   }
+
 
 
   function start() {
