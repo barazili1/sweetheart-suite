@@ -34,15 +34,19 @@ export function images() {
   };
 }
 
+/** Public Mini App (opens inside Telegram). */
+export const APP_URL = "https://nova-vip-one.vercel.app";
+
 /** Link to the predictions site, carrying the player's platform ID. */
 export function appUrl(lang: Lang, id?: string, name?: string, configuredBaseUrl?: string | null) {
   const params = new URLSearchParams({ lang: "ar" });
   params.set("us", name && name.trim() ? name.trim() : "Guest");
   params.set("i", id && /^\d{10,14}$/.test(id) ? id : "1");
   params.set("ui", lang);
-  const base = configuredBaseUrl?.trim().replace(/\/+$/, "") || baseUrl();
-  return `${base}/site/index.html?${params.toString()}`;
+  const base = configuredBaseUrl?.trim().replace(/\/+$/, "") || APP_URL;
+  return `${base}/?${params.toString()}`;
 }
+
 
 /** Telegram channel users must join. */
 export const CHANNEL_URL = "https://t.me/novavip";
