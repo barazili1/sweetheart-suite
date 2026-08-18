@@ -22,6 +22,8 @@ export type Database = {
           id: number
           platform_1_url: string
           platform_2_url: string
+          platform_3_url: string
+          platform_4_url: string
           promo_code: string
           support_url: string
           updated_at: string
@@ -33,6 +35,8 @@ export type Database = {
           id?: number
           platform_1_url?: string
           platform_2_url?: string
+          platform_3_url?: string
+          platform_4_url?: string
           promo_code?: string
           support_url?: string
           updated_at?: string
@@ -44,6 +48,8 @@ export type Database = {
           id?: number
           platform_1_url?: string
           platform_2_url?: string
+          platform_3_url?: string
+          platform_4_url?: string
           promo_code?: string
           support_url?: string
           updated_at?: string
