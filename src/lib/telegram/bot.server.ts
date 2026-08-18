@@ -79,8 +79,6 @@ const answerCallback = (id: string, text?: string) =>
 /* --------------------------------- design -------------------------------- */
 
 const RULE = "━━━━━━━━━━━━━━━━━━";
-const TOP = "╔══════════════╗";
-const BOT_ = "╚══════════════╝";
 
 /** Neon progress bar: ▰▰▱▱▱ */
 function bar(step: number, total = 5) {
