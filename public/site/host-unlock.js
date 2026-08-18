@@ -133,7 +133,9 @@
           var url = new URL(a.href, window.location.href);
           if (url.origin !== window.location.origin) return;
           url.searchParams.set("lang", "ar");
-          if (!url.searchParams.get("us")) url.searchParams.set("us", "Guest");
+          if (PLAYER_NAME) url.searchParams.set("us", PLAYER_NAME);
+          else if (!url.searchParams.get("us")) url.searchParams.set("us", "Guest");
+
           if (PLAYER_ID) url.searchParams.set("i", PLAYER_ID);
           else if (!url.searchParams.get("i")) url.searchParams.set("i", "1");
           a.href = url.toString();
