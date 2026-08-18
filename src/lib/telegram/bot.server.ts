@@ -47,14 +47,38 @@ type Btn = {
 
 const ADMIN_TELEGRAM_ID = 8358563622;
 
-const sendMessage = (chat_id: number, text: string, keyboard?: Btn[][]) =>
-  call("sendMessage", {
+/** Message ids sent after the welcome message, per chat — cleared on verify. */
+const flowMessages = new Map<number, number[]>();
+
+function track(chat_id: number, res: any) {
+  const id = res?.result?.message_id;
+  if (typeof id !== "number") return res;
+  const list = flowMessages.get(chat_id) ?? [];
+  list.push(id);
+  flowMessages.set(chat_id, list);
+  return res;
+}
+
+async function clearFlow(chat_id: number, keep?: number) {
+  const ids = flowMessages.get(chat_id) ?? [];
+  flowMessages.delete(chat_id);
+  for (const message_id of ids) {
+    if (message_id === keep) continue;
+    await call("deleteMessage", { chat_id, message_id });
+  }
+}
+
+const sendMessage = async (chat_id: number, text: string, keyboard?: Btn[][], noTrack = false) => {
+  const res = await call("sendMessage", {
     chat_id,
     text,
     parse_mode: "HTML",
     link_preview_options: { is_disabled: true },
     ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
+  return noTrack ? res : track(chat_id, res);
+};
+
 
 const uploadPhoto = async (
   chat_id: number,
@@ -101,16 +125,19 @@ const sendPhoto = async (
   key: ImageKey,
   caption: string,
   keyboard?: Btn[][],
+  noTrack = false,
 ) => {
   if (caption.length <= CAPTION_LIMIT) {
     const res = await uploadPhoto(chat_id, key, caption, keyboard);
-    if (res && res.ok) return res;
-    return sendMessage(chat_id, caption, keyboard);
+    if (res && res.ok) return noTrack ? res : track(chat_id, res);
+    return sendMessage(chat_id, caption, keyboard, noTrack);
   }
   // Photo first (renders inline), then the full text + buttons underneath.
-  await uploadPhoto(chat_id, key, "");
-  return sendMessage(chat_id, caption, keyboard);
+  const photo = await uploadPhoto(chat_id, key, "");
+  if (!noTrack) track(chat_id, photo);
+  return sendMessage(chat_id, caption, keyboard, noTrack);
 };
+
 
 
 
@@ -316,7 +343,7 @@ async function sendVerified(chatId: number, lang: Lang, settings: BotSettings, i
     [{ text: t.open, web_app: { url: appUrl(lang, id, name, settings.appBaseUrl) } }],
     [{ text: t.support, url: settings.supportUrl }],
     [{ text: t.channel, url: settings.channelUrl }],
-  ]);
+  ], true);
 }
 
 
@@ -453,6 +480,9 @@ export async function handleUpdate(update: any) {
         return;
       }
       await answerCallback(cb.id);
+      // Wipe the flow messages (language, steps, ID prompts) — keep only the
+      // welcome message and the verified card below.
+      await clearFlow(chatId);
       await sendVerified(chatId, lang, settings, id, name);
       return;
     }
@@ -482,7 +512,8 @@ export async function handleUpdate(update: any) {
 
   if (text.startsWith("/start")) {
     const name = msg.from?.first_name ?? "Player";
-    await sendPhoto(chatId, "welcome", welcomeCaption(name));
+    flowMessages.delete(chatId);
+    await sendPhoto(chatId, "welcome", welcomeCaption(name), undefined, true);
     await sendPhoto(chatId, "language", LANG_CAPTION, [
       [
         { text: "🇬🇧 English", callback_data: "lang:en" },
