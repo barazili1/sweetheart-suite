@@ -347,8 +347,11 @@
       "opacity:.9;max-width:130px;overflow:hidden;text-overflow:ellipsis}" +
       "@keyframes novaIdGlow{0%,100%{box-shadow:0 0 10px rgba(144,214,0,.25)}" +
       "50%{box-shadow:0 0 22px rgba(144,214,0,.55)}}" +
+      ".nova-id-chip.nova-id-float{position:fixed;top:10px;left:10px;z-index:99999;" +
+      "margin:0;background:rgba(8,12,4,.88)}" +
       "@media(max-width:480px){.nova-id-chip{font-size:10px;padding:5px 9px;margin-right:6px}" +
       ".nova-id-chip .nova-id-user{font-size:9px;max-width:96px}}";
+
     document.head.appendChild(st);
   }
 
