@@ -56,7 +56,7 @@ const sendMessage = (chat_id: number, text: string, keyboard?: Btn[][]) =>
     ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
 
-const sendPhoto = async (
+const uploadPhoto = async (
   chat_id: number,
   key: ImageKey,
   caption: string,
@@ -64,13 +64,15 @@ const sendPhoto = async (
 ) => {
   const bytes = imageBytes(key);
   // Upload the bytes directly: Telegram never has to reach our host, so images
-  // always arrive even when the deployment is auth-gated.
+  // always arrive (and render inline, no download needed).
   if (bytes) {
     try {
       const form = new FormData();
       form.append("chat_id", String(chat_id));
-      form.append("caption", caption);
-      form.append("parse_mode", "HTML");
+      if (caption) {
+        form.append("caption", caption);
+        form.append("parse_mode", "HTML");
+      }
       if (keyboard) form.append("reply_markup", JSON.stringify({ inline_keyboard: keyboard }));
       form.append("photo", new Blob([bytes as unknown as BlobPart], { type: "image/jpeg" }), `${key}.jpg`);
       const res = await fetch(`${API}/bot${token()}/sendPhoto`, { method: "POST", body: form });
@@ -82,17 +84,34 @@ const sendPhoto = async (
       console.error("Telegram sendPhoto upload threw", error);
     }
   }
-  // Fallbacks: remote URL, then plain text with the same buttons.
-  const res = await call("sendPhoto", {
+  // Fallback: let Telegram fetch the hosted copy.
+  return call("sendPhoto", {
     chat_id,
     photo: images()[key],
-    caption,
-    parse_mode: "HTML",
+    ...(caption ? { caption, parse_mode: "HTML" } : {}),
     ...(keyboard ? { reply_markup: { inline_keyboard: keyboard } } : {}),
   });
-  if (!res || !res.ok) return sendMessage(chat_id, caption, keyboard);
-  return res;
 };
+
+/** Telegram caption limit is 1024 chars — longer copy goes in its own message. */
+const CAPTION_LIMIT = 1000;
+
+const sendPhoto = async (
+  chat_id: number,
+  key: ImageKey,
+  caption: string,
+  keyboard?: Btn[][],
+) => {
+  if (caption.length <= CAPTION_LIMIT) {
+    const res = await uploadPhoto(chat_id, key, caption, keyboard);
+    if (res && res.ok) return res;
+    return sendMessage(chat_id, caption, keyboard);
+  }
+  // Photo first (renders inline), then the full text + buttons underneath.
+  await uploadPhoto(chat_id, key, "");
+  return sendMessage(chat_id, caption, keyboard);
+};
+
 
 
 const answerCallback = (id: string, text?: string) =>
@@ -100,27 +119,31 @@ const answerCallback = (id: string, text?: string) =>
 
 /* --------------------------------- design -------------------------------- */
 
-const RULE = "━━━━━━━━━━━━━━━━━━";
+/** Thin divider — renders cleanly in both RTL and LTR, unlike ASCII boxes. */
+const RULE = "▬▬▬▬▬▬▬▬▬▬▬▬▬▬";
+const DOT = "◆";
 
-/** Neon progress bar: ▰▰▱▱▱ */
+/** Progress bar: ▰▰▱▱▱ */
 function bar(step: number, total = 5) {
   return "▰".repeat(step) + "▱".repeat(total - step);
 }
 
-function card(step: number, label: string, body: string, lang: Lang) {
-  const progress = lang === "en" ? `STEP ${step} OF 5` : `الخطوة ${step} من 5`;
-  return (
-    `┏━━━━━━━━━━━━━━━━━━┓\n` +
-    `┃  <b>${label}</b>\n` +
-    `┗━━━━━━━━━━━━━━━━━━┛\n\n` +
-    `${bar(step)}  <b>${progress}</b>\n` +
-    `${RULE}\n\n` +
-    `${body}`
-  );
-}
-
 function escape(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/** Elegant header block used by every message. */
+function head(title: string, subtitle?: string) {
+  return `👑 <b>${title}</b>\n${RULE}` + (subtitle ? `\n<i>${subtitle}</i>\n` : "\n");
+}
+
+function card(step: number, label: string, body: string, lang: Lang) {
+  const progress = lang === "en" ? `Step ${step} of 5` : `الخطوة ${step} من ٥`;
+  return (
+    `${head(label)}` +
+    `${bar(step)}  <b>${progress}</b>\n\n` +
+    `${body}`
+  );
 }
 
 /* ---------------------------------- copy --------------------------------- */
@@ -128,11 +151,24 @@ function escape(s: string) {
 function welcomeCaption(name: string, lang: Lang = "ar") {
   const safe = escape(name);
   return lang === "en"
-    ? `👑 <b>WELCOME TO ${BOT_NAME}</b> 👑\n${RULE}\nHello <b>${safe}</b>!\n\n⚡ Premium AI signals\n🎯 Elite accuracy\n💎 VIP members only\n${RULE}\n<i>Your journey starts now.</i>`
-    : `👑 <b>مرحبًا بك في ${BOT_NAME}</b> 👑\n${RULE}\nأهلاً <b>${safe}</b>!\n\n⚡ إشارات ذكية احترافية\n🎯 دقة نخبوية\n💎 حصري لأعضاء VIP\n${RULE}\n<i>رحلتك تبدأ الآن.</i>`;
+    ? `${head(`${BOT_NAME}`, "Premium AI signals club")}` +
+        `Welcome, <b>${safe}</b> 🤝\n\n` +
+        `${DOT} ⚡ Real-time smart signals\n` +
+        `${DOT} 🎯 Elite accuracy\n` +
+        `${DOT} 💎 VIP members only\n\n` +
+        `${RULE}\n<i>Choose your language to begin.</i>`
+    : `${head(`${BOT_NAME}`, "نادي الإشارات الذكية المميزة")}` +
+        `أهلاً بك يا <b>${safe}</b> 🤝\n\n` +
+        `${DOT} ⚡ إشارات لحظية ذكية\n` +
+        `${DOT} 🎯 دقة عالية جدًا\n` +
+        `${DOT} 💎 حصري لأعضاء VIP\n\n` +
+        `${RULE}\n<i>اختر لغتك للبدء.</i>`;
 }
 
-const LANG_CAPTION = `🌐 <b>SELECT YOUR LANGUAGE</b>\n${RULE}\n🇬🇧 English  •  🇸🇦 العربية\n${RULE}\n🌐 <b>اختر لغتك</b>`;
+const LANG_CAPTION =
+  `🌐 <b>Language • اللغة</b>\n${RULE}\n` +
+  `Select your language to continue.\n` +
+  `اختر لغتك للمتابعة.`;
 
 function copy(lang: Lang, promoCode: string) {
   const base = T[lang];
@@ -141,8 +177,8 @@ function copy(lang: Lang, promoCode: string) {
       3,
       lang === "en" ? "PROMO CODE" : "البروموكود",
       lang === "en"
-        ? `🎁 <b>Create your account with the promo code</b>\n\n┌──────────────┐\n│  <code>${escape(promoCode)}</code>\n└──────────────┘\n\n<i>Tap the code to copy it instantly.</i>`
-        : `🎁 <b>إنشاء حساب باستخدام البروموكود</b>\n\n┌──────────────┐\n│  <code>${escape(promoCode)}</code>\n└──────────────┘\n\n<i>اضغط على الكود لنسخه فورًا.</i>`,
+        ? `🎁 Register a <b>new</b> account with this code:\n\n<code>${escape(promoCode)}</code>\n\n<i>Tap the code to copy it.</i>`
+        : `🎁 سجّل حساب <b>جديد</b> بالكود التالي:\n\n<code>${escape(promoCode)}</code>\n\n<i>اضغط على الكود لنسخه.</i>`,
       lang,
     ),
     copy: lang === "en" ? `📋 Copy code ${promoCode}` : `📋 نسخ الكود ${promoCode}`,
@@ -156,83 +192,73 @@ function copy(lang: Lang, promoCode: string) {
 
 const T = {
   en: {
-    platform: `🎰 <b>CHOOSE YOUR PLATFORM</b>\n${RULE}\nSelect the platform you want to activate with <b>${BOT_NAME}</b>.\n${RULE}`,
+    platform: `${head("CHOOSE YOUR PLATFORM", "Pick the platform to activate")}🎰 Select one of the options below.`,
     step1: (p: string) =>
-      card(
-        1,
-        "DOWNLOAD",
-        `📲 <b>Install the ${p} app</b>\n\n• Use the official app only\n• Keep it installed to receive signals\n\n<i>Tap the button below.</i>`,
-        "en",
-      ),
+      card(1, "DOWNLOAD", `📲 Install the <b>${p}</b> app\n\n${DOT} Official app only\n${DOT} Keep it installed to receive signals`, "en"),
     dl: (p: string) => `⬇️ Download ${p}`,
     step2: card(
       2,
       "JOIN CHANNEL",
-      `📢 <b>Join our Telegram channel</b>\n\n• All VIP signals are posted there\n• Never miss an update\n\n<i>Membership is checked at verification.</i>`,
+      `📢 Join our official Telegram channel\n\n${DOT} All VIP signals are posted there\n${DOT} Membership is checked at verification`,
       "en",
     ),
     join: "🔔 Join the channel",
     step4: card(
       4,
       "DEPOSIT",
-      `💰 <b>Fund your account</b>\n\n• Minimum <b>300 EGP</b>\n• or <b>6 USD</b>\n\n<i>Required to unlock VIP signals.</i>`,
+      `💰 Fund your account\n\n${DOT} Minimum <b>300 EGP</b>\n${DOT} or <b>6 USD</b>`,
       "en",
     ),
     step5: card(
       5,
       "YOUR ID",
-      `🆔 <b>Send your platform account ID</b>\n\n• Digits only\n• Between <b>10</b> and <b>14</b> numbers\n\n<i>Example: 1234567890</i>`,
+      `🆔 Send your platform account ID\n\n${DOT} Digits only\n${DOT} Between <b>10</b> and <b>14</b> numbers\n\n<i>Example: 1234567890</i>`,
       "en",
     ),
     badId: `⚠️ <b>Invalid ID</b>\n${RULE}\nSend <b>digits only</b>, between <b>10</b> and <b>14</b> numbers.`,
     idOk: (id: string) =>
-      `✅ <b>ID RECEIVED</b>\n${RULE}\n🆔 <code>${id}</code>\n${RULE}\n${bar(5)}  <b>5/5</b>\nAll steps completed — tap below.`,
+      `${head("ID RECEIVED")}🆔 <code>${id}</code>\n\n${bar(5)}  <b>5/5</b>\n<i>All steps completed — tap Verify below.</i>`,
     needId: "Send your account ID first (10-14 digits).",
-    verify: "🔎 VERIFY NOW",
-    verified: `✅ <b>VERIFICATION SUCCESSFUL</b>\n${RULE}\nWelcome to <b>${BOT_NAME}</b> 👑\nYour access is now active.\n${RULE}\n<i>Good luck and play responsibly.</i>`,
+    verify: "✅ VERIFY NOW",
+    verified: `${head("VERIFICATION SUCCESSFUL")}Welcome to <b>${BOT_NAME}</b> 👑\nYour VIP access is now active.\n\n<i>Good luck and play responsibly.</i>`,
     open: "🚀 Open the app now",
     support: "🛠 Contact support",
     channel: "📢 Join Telegram",
     hint: `Send /start to begin.`,
   },
   ar: {
-    platform: `🎰 <b>اختر المنصة</b>\n${RULE}\nاختر المنصة التي تريد تفعيلها مع <b>${BOT_NAME}</b>.\n${RULE}`,
+    platform: `${head("اختر المنصة", "اختر المنصة التي تريد تفعيلها")}🎰 اختر واحدة من الخيارات بالأسفل.`,
     step1: (p: string) =>
-      card(
-        1,
-        "التحميل",
-        `📲 <b>حمّل تطبيق ${p}</b>\n\n✅ استخدم التطبيق الرسمي فقط\n✅ احتفظ به على هاتفك لاستقبال الإشارات\n\n👇 <i>اضغط زر التحميل بالأسفل</i>`,
-        "ar",
-      ),
+      card(1, "التحميل", `📲 حمّل تطبيق <b>${p}</b>\n\n${DOT} استخدم التطبيق الرسمي فقط\n${DOT} احتفظ به على هاتفك لاستقبال الإشارات`, "ar"),
     dl: (p: string) => `⬇️ تحميل ${p}`,
     step2: card(
       2,
-      "قناة التلجرام",
-      `📢 <b>انضم لقناة التلجرام الرسمية</b>\n\n✅ إشارات VIP تُنشر داخل القناة\n✅ تابع كل التحديثات أولًا بأول\n\n⚠️ <i>سيتم التأكد من اشتراكك عند التحقق</i>`,
+      "قناة التليجرام",
+      `📢 اشترك في القناة الرسمية\n\n${DOT} كل إشارات VIP تُنشر داخل القناة\n${DOT} يتم التأكد من اشتراكك عند التحقق`,
       "ar",
     ),
     join: "🔔 انضم للقناة",
     step4: card(
       4,
       "الإيداع",
-      `💰 <b>قم بتمويل حسابك</b>\n\n💵 الحد الأدنى: <b>300 جنيه مصري</b>\n💵 أو: <b>6 دولار أمريكي</b>\n\n🔐 <i>الإيداع مطلوب لتفعيل إشارات VIP</i>`,
+      `💰 قم بتمويل حسابك\n\n${DOT} الحد الأدنى <b>٣٠٠ جنيه</b>\n${DOT} أو <b>٦ دولار</b>`,
       "ar",
     ),
     step5: card(
       5,
       "الـ ID",
-      `🆔 <b>أرسل ID حسابك في المنصة</b>\n\n✅ أرقام فقط بدون حروف أو رموز\n✅ من <b>10</b> إلى <b>14</b> رقم\n\n📝 <i>مثال: 1234567890</i>`,
+      `🆔 أرسل ID حسابك في المنصة\n\n${DOT} أرقام فقط بدون حروف\n${DOT} من <b>١٠</b> إلى <b>١٤</b> رقم\n\n<i>مثال: 1234567890</i>`,
       "ar",
     ),
-    badId: `⚠️ <b>ID غير صحيح</b>\n${RULE}\nأرسل <b>أرقام فقط</b> من <b>10</b> إلى <b>14</b> رقم.`,
+    badId: `⚠️ <b>ID غير صحيح</b>\n${RULE}\nأرسل <b>أرقام فقط</b> من <b>١٠</b> إلى <b>١٤</b> رقم.`,
     idOk: (id: string) =>
-      `✅ <b>تم استلام الـ ID</b>\n${RULE}\n🆔 <code>${id}</code>\n${RULE}\n${bar(5)}  <b>5/5</b>\nتم إكمال كل الشروط — اضغط بالأسفل.`,
+      `${head("تم استلام الـ ID")}🆔 <code>${id}</code>\n\n${bar(5)}  <b>٥/٥</b>\n<i>تم إكمال كل الخطوات — اضغط «التحقق الآن».</i>`,
     needId: "ابعت الـ ID الأول (من 10 لـ 14 رقم).",
-    verify: "🔎 التحقق الآن",
-    verified: `✅ <b>تم التحقق بنجاح</b>\n${RULE}\nمرحبًا بك في <b>${BOT_NAME}</b> 👑\nتم تفعيل وصولك الآن.\n${RULE}\n<i>حظًا موفقًا واللعب بمسؤولية.</i>`,
+    verify: "✅ التحقق الآن",
+    verified: `${head("تم التحقق بنجاح")}مرحبًا بك في <b>${BOT_NAME}</b> 👑\nتم تفعيل وصولك لـ VIP.\n\n<i>حظًا موفقًا واللعب بمسؤولية.</i>`,
     open: "🚀 فتح التطبيق الآن",
     support: "🛠 التواصل مع الدعم",
-    channel: "📢 الاشتراك في التلجرام",
+    channel: "📢 الاشتراك في التليجرام",
     hint: `أرسل /start للبدء.`,
   },
 } as const;
@@ -244,35 +270,32 @@ function termsCaption(lang: Lang, platform: string, promo: string) {
   const code = escape(promo);
   if (lang === "en") {
     return (
-      `╔═══════ ⟡ ═══════╗\n` +
-      `   👑 <b>${BOT_NAME} — ACTIVATION</b>\n` +
-      `╚═══════ ⟡ ═══════╝\n` +
-      `${bar(5)}  <b>5 STEPS</b>\n` +
+      `${head(`${BOT_NAME} — ACTIVATION`, "Complete the 5 steps below")}` +
+      `${bar(5)}\n` +
       `${RULE}\n` +
-      `<b>1️⃣ DOWNLOAD</b>\n     📲 Install <b>${escape(platform)}</b> (button below)\n\n` +
-      `<b>2️⃣ CHANNEL</b>\n     📢 Join our official Telegram channel\n\n` +
-      `<b>3️⃣ PROMO CODE</b>\n     🎁 Register a <b>new</b> account with\n     <code>${code}</code>  <i>(tap to copy)</i>\n\n` +
-      `<b>4️⃣ DEPOSIT</b>\n     💰 Minimum <b>300 EGP</b> or <b>6 USD</b>\n\n` +
-      `<b>5️⃣ YOUR ID</b>\n     🆔 Send your account ID here (10–14 digits)\n` +
+      `<b>1 ${DOT} DOWNLOAD</b>\n📲 Install <b>${escape(platform)}</b> from the button below\n\n` +
+      `<b>2 ${DOT} CHANNEL</b>\n📢 Join our official Telegram channel\n\n` +
+      `<b>3 ${DOT} PROMO CODE</b>\n🎁 Register a <b>new</b> account with\n<code>${code}</code> <i>(tap to copy)</i>\n\n` +
+      `<b>4 ${DOT} DEPOSIT</b>\n💰 Minimum <b>300 EGP</b> or <b>6 USD</b>\n\n` +
+      `<b>5 ${DOT} YOUR ID</b>\n🆔 Send your account ID here (10–14 digits)\n` +
       `${RULE}\n` +
-      `⚠️ <i>Complete every step in order, then tap Verify.</i>`
+      `⚠️ <i>Follow the steps in order, then tap Verify.</i>`
     );
   }
   return (
-    `╔═══════ ⟡ ═══════╗\n` +
-    `   👑 <b>${BOT_NAME} — شروط التفعيل</b>\n` +
-    `╚═══════ ⟡ ═══════╝\n` +
-    `${bar(5)}  <b>٥ خطوات</b>\n` +
+    `${head(`${BOT_NAME} — شروط التفعيل`, "أكمل الخطوات الخمس بالترتيب")}` +
+    `${bar(5)}\n` +
     `${RULE}\n` +
-    `<b>1️⃣ التحميل</b>\n     📲 حمّل تطبيق <b>${escape(platform)}</b> من الزر بالأسفل\n\n` +
-    `<b>2️⃣ القناة</b>\n     📢 اشترك في قناة التليجرام الرسمية\n\n` +
-    `<b>3️⃣ البروموكود</b>\n     🎁 سجّل حساب <b>جديد</b> بالكود\n     <code>${code}</code>  <i>(اضغط للنسخ)</i>\n\n` +
-    `<b>4️⃣ الإيداع</b>\n     💰 الحد الأدنى <b>٣٠٠ جنيه</b> أو <b>٦ دولار</b>\n\n` +
-    `<b>5️⃣ الـ ID</b>\n     🆔 ابعت ID حسابك هنا (من ١٠ لـ ١٤ رقم)\n` +
+    `<b>١ ${DOT} التحميل</b>\n📲 حمّل تطبيق <b>${escape(platform)}</b> من الزر بالأسفل\n\n` +
+    `<b>٢ ${DOT} القناة</b>\n📢 اشترك في قناة التليجرام الرسمية\n\n` +
+    `<b>٣ ${DOT} البروموكود</b>\n🎁 سجّل حساب <b>جديد</b> بالكود\n<code>${code}</code> <i>(اضغط للنسخ)</i>\n\n` +
+    `<b>٤ ${DOT} الإيداع</b>\n💰 الحد الأدنى <b>٣٠٠ جنيه</b> أو <b>٦ دولار</b>\n\n` +
+    `<b>٥ ${DOT} الـ ID</b>\n🆔 ابعت ID حسابك هنا (من ١٠ لـ ١٤ رقم)\n` +
     `${RULE}\n` +
-    `⚠️ <i>نفّذ كل الخطوات بالترتيب ثم اضغط «التحقق الآن».</i>`
+    `⚠️ <i>نفّذ الخطوات بالترتيب ثم اضغط «التحقق الآن».</i>`
   );
 }
+
 
 async function sendSteps(chatId: number, lang: Lang, pk: PlatformKey, settings: BotSettings) {
   const t = T[lang];
