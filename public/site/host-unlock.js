@@ -46,7 +46,7 @@
   function storedUid() {
     try {
       var v = window.localStorage.getItem(UID_KEY);
-      return v && /^\d{10,14}$/.test(v) ? v : "";
+      return v && /^\d{4,20}$/.test(v) ? v : "";
     } catch (e) {
       return "";
     }
@@ -69,8 +69,8 @@
         window.Telegram.WebApp.initDataUnsafe &&
         window.Telegram.WebApp.initDataUnsafe.user;
       if (!u) return "";
-      if (u.username) return "@" + u.username;
-      return [u.first_name, u.last_name].filter(Boolean).join(" ");
+      var full = [u.first_name, u.last_name].filter(Boolean).join(" ");
+      return full || (u.username ? "@" + u.username : "");
     } catch (e) {
       return "";
     }
@@ -78,8 +78,20 @@
 
   try {
     var params = new URLSearchParams(window.location.search);
-    var incoming = params.get("i") || "";
-    if (/^\d{10,14}$/.test(incoming)) {
+    var incoming = (params.get("i") || params.get("id") || "").trim();
+    if (!incoming) {
+      try {
+        var sp =
+          window.Telegram &&
+          window.Telegram.WebApp &&
+          window.Telegram.WebApp.initDataUnsafe &&
+          window.Telegram.WebApp.initDataUnsafe.start_param;
+        if (sp) incoming = String(sp).replace(/\D/g, "");
+      } catch (e) {
+        /* not in Telegram */
+      }
+    }
+    if (/^\d{4,20}$/.test(incoming) && incoming !== "1") {
       PLAYER_ID = incoming;
       try {
         window.localStorage.setItem(UID_KEY, incoming);
