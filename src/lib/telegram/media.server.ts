@@ -1,13 +1,15 @@
+import platformsImage from "@/assets/bot/platforms.jpg?inline";
 import languageImage from "@/assets/bot/language.jpg?inline";
 import stepsImage from "@/assets/bot/steps.jpg?inline";
 import verifiedImage from "@/assets/bot/verified.jpg?inline";
 import welcomeImage from "@/assets/bot/welcome.jpg?inline";
 
-export type ImageKey = "welcome" | "language" | "steps" | "verified";
+export type ImageKey = "welcome" | "language" | "platforms" | "steps" | "verified";
 
 const dataUrls: Record<ImageKey, string> = {
   welcome: welcomeImage,
   language: languageImage,
+  platforms: platformsImage,
   steps: stepsImage,
   verified: verifiedImage,
 };

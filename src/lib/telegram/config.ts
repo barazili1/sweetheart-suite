@@ -1,12 +1,6 @@
 /**
  * NOVA VIP bot configuration.
  * Edit the links below at any time — no other file needs to change.
- *
- * The public base URL is resolved at request time so the same code works on
- * the Lovable preview, on Vercel, and on any custom domain:
- *   1. PUBLIC_BASE_URL     (set this in Vercel → Settings → Environment Variables)
- *   2. VERCEL_PROJECT_PRODUCTION_URL / VERCEL_URL (set automatically by Vercel)
- *   3. the fallback below (Lovable preview)
  */
 
 export const BOT_NAME = "NOVA VIP";
@@ -29,6 +23,7 @@ export function images() {
   return {
     welcome: `${base}/api/public/telegram/image/welcome`,
     language: `${base}/api/public/telegram/image/language`,
+    platforms: `${base}/api/public/telegram/image/platforms`,
     steps: `${base}/api/public/telegram/image/steps`,
     verified: `${base}/api/public/telegram/image/verified`,
   };
@@ -47,17 +42,38 @@ export function appUrl(lang: Lang, id?: string, name?: string, configuredBaseUrl
   return `${base}/?${params.toString()}`;
 }
 
-
 /** Telegram channel users must join. */
-export const CHANNEL_URL = "https://t.me/novavip";
+export const CHANNEL_URL = "https://t.me/+KA1g9YjXsmBmZmNk";
 /** Support contact. */
-export const SUPPORT_URL = "https://t.me/novavip_support";
+export const SUPPORT_URL = "https://t.me/TOPx111m";
 
-export const PROMO_CODE = "1234";
+export const PROMO_CODE = "Gooo33";
 
 export const PLATFORMS = {
-  p1: { key: "p1", name: "1xBet", download: "https://1xbet.com/" },
-  p2: { key: "p2", name: "1xBet2", download: "https://1xbet.com/" },
+  p1: {
+    key: "p1",
+    name: "Megapari",
+    emoji: "🔵",
+    download: "https://refpazitag.top/L?tag=d_2926243m_54987c_&site=2926243&ad=54987",
+  },
+  p2: {
+    key: "p2",
+    name: "PariPulse",
+    emoji: "🔴",
+    download: "https://refpa22168.com/L?tag=d_3638295m_99042c_&site=3638295&ad=99042",
+  },
+  p3: {
+    key: "p3",
+    name: "GoooBet",
+    emoji: "🔷",
+    download: "https://gooobetaffiliate.com/L?tag=d_2787091m_127929c_&site=2787091&ad=127929",
+  },
+  p4: {
+    key: "p4",
+    name: "WinWin",
+    emoji: "🟢",
+    download: "https://refpa98980.com/L?tag=d_5876143m_68383c_&site=5876143&ad=68383",
+  },
 } as const;
 
 export type PlatformKey = keyof typeof PLATFORMS;

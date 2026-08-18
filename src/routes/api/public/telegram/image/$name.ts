@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import platformsImage from "@/assets/bot/platforms.jpg?inline";
 import languageImage from "@/assets/bot/language.jpg?inline";
 import stepsImage from "@/assets/bot/steps.jpg?inline";
 import verifiedImage from "@/assets/bot/verified.jpg?inline";
@@ -6,6 +7,7 @@ import welcomeImage from "@/assets/bot/welcome.jpg?inline";
 
 const images: Record<string, string> = {
   language: languageImage,
+  platforms: platformsImage,
   steps: stepsImage,
   verified: verifiedImage,
   welcome: welcomeImage,
