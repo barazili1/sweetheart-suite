@@ -352,27 +352,102 @@ async function sendVerified(chatId: number, lang: Lang, settings: BotSettings, i
 }
 
 
-function isAdmin(fromId: unknown) {
-  return Number(fromId) === ADMIN_TELEGRAM_ID;
-}
+/* --------------------------------- admin --------------------------------- */
 
-function adminPanel(settings: BotSettings) {
+type EditableField =
+  | "channel_url"
+  | "support_url"
+  | "platform_1_url"
+  | "platform_2_url"
+  | "platform_3_url"
+  | "platform_4_url"
+  | "app_base_url"
+  | "promo_code"
+  | "add_admin"
+  | "remove_admin";
+
+const FIELD_LABEL: Record<EditableField, string> = {
+  channel_url: "رابط قناة التليجرام",
+  support_url: "رابط الدعم",
+  platform_1_url: `رابط تحميل ${PLATFORMS.p1.name}`,
+  platform_2_url: `رابط تحميل ${PLATFORMS.p2.name}`,
+  platform_3_url: `رابط تحميل ${PLATFORMS.p3.name}`,
+  platform_4_url: `رابط تحميل ${PLATFORMS.p4.name}`,
+  app_base_url: "رابط التطبيق (الموقع)",
+  promo_code: "البروموكود",
+  add_admin: "إضافة أدمن (ID تليجرام)",
+  remove_admin: "حذف أدمن (ID تليجرام)",
+};
+
+function adminPanel(settings: BotSettings, admins: { id: number; label: string | null }[]) {
   const status = settings.enabled ? "🟢 يعمل" : "🔴 متوقف";
-  return `👑 <b>لوحة تحكم ${BOT_NAME}</b>\n${RULE}\nالحالة: <b>${status}</b>\n\n📢 القناة: ${escape(settings.channelUrl)}\n🛠 الدعم: ${escape(settings.supportUrl)}\n🎁 البروموكود: <code>${escape(settings.promoCode)}</code>\n${RULE}\nاختر إجراءً من الأزرار:`;
+  return (
+    `👑 <b>لوحة تحكم ${BOT_NAME}</b>\n${RULE}\n` +
+    `الحالة: <b>${status}</b>\n\n` +
+    `📢 القناة: ${escape(settings.channelUrl)}\n` +
+    `🛠 الدعم: ${escape(settings.supportUrl)}\n` +
+    `🎁 البروموكود: <code>${escape(settings.promoCode)}</code>\n` +
+    `🌐 التطبيق: ${escape(settings.appBaseUrl ?? "الافتراضي")}\n\n` +
+    `${PLATFORMS.p1.name}: ${escape(settings.platform1Url)}\n` +
+    `${PLATFORMS.p2.name}: ${escape(settings.platform2Url)}\n` +
+    `${PLATFORMS.p3.name}: ${escape(settings.platform3Url)}\n` +
+    `${PLATFORMS.p4.name}: ${escape(settings.platform4Url)}\n\n` +
+    `👥 الأدمن: ${admins.map((a) => `<code>${a.id}</code>`).join(" · ")}\n` +
+    `${RULE}\nاختر ما تريد تعديله:`
+  );
 }
 
 async function sendAdminPanel(chatId: number, settings: BotSettings) {
-  await sendMessage(chatId, adminPanel(settings), [
+  const admins = await listAdmins();
+  await sendMessage(
+    chatId,
+    adminPanel(settings, admins),
     [
-      { text: "▶️ تشغيل", callback_data: "admin:on" },
-      { text: "⏸ إيقاف", callback_data: "admin:off" },
+      [
+        { text: "▶️ تشغيل", callback_data: "admin:on" },
+        { text: "⏸ إيقاف", callback_data: "admin:off" },
+      ],
+      [
+        { text: "📢 القناة", callback_data: "admin:edit:channel_url" },
+        { text: "🛠 الدعم", callback_data: "admin:edit:support_url" },
+      ],
+      [
+        { text: "🎁 البروموكود", callback_data: "admin:edit:promo_code" },
+        { text: "🌐 التطبيق", callback_data: "admin:edit:app_base_url" },
+      ],
+      [
+        { text: PLATFORMS.p1.name, callback_data: "admin:edit:platform_1_url" },
+        { text: PLATFORMS.p2.name, callback_data: "admin:edit:platform_2_url" },
+      ],
+      [
+        { text: PLATFORMS.p3.name, callback_data: "admin:edit:platform_3_url" },
+        { text: PLATFORMS.p4.name, callback_data: "admin:edit:platform_4_url" },
+      ],
+      [
+        { text: "➕ إضافة أدمن", callback_data: "admin:edit:add_admin" },
+        { text: "➖ حذف أدمن", callback_data: "admin:edit:remove_admin" },
+      ],
+      [{ text: "🔄 تحديث اللوحة", callback_data: "admin:panel" }],
     ],
-    [{ text: "🔗 تعديل الروابط والكود", callback_data: "admin:help" }],
-    [{ text: "🔄 تحديث اللوحة", callback_data: "admin:panel" }],
-  ]);
+    true,
+  );
 }
 
-const ADMIN_HELP = `⚙️ <b>أوامر تعديل إعدادات البوت</b>\n${RULE}\n<code>/set_channel https://t.me/...</code>\n<code>/set_support https://t.me/...</code>\n<code>/set_platform1 https://...</code>\n<code>/set_platform2 https://...</code>\n<code>/set_promo 1234</code>\n<code>/set_app https://your-domain.com</code>\n\nكل تعديل يُحفظ فورًا ويظهر للمستخدمين.`;
+/** Ask for a value with ForceReply — the field is encoded in the prompt text. */
+async function askForValue(chatId: number, field: EditableField) {
+  await call("sendMessage", {
+    chat_id: chatId,
+    text: `✏️ <b>${FIELD_LABEL[field]}</b>\n${SOFT}\nابعت القيمة الجديدة في رد على هذه الرسالة.\n\n<code>#${field}</code>`,
+    parse_mode: "HTML",
+    reply_markup: { force_reply: true, input_field_placeholder: FIELD_LABEL[field] },
+  });
+}
+
+function fieldFromPrompt(text?: string): EditableField | null {
+  const m = /#([a-z_0-9]+)/.exec(text ?? "");
+  const key = m?.[1] as EditableField | undefined;
+  return key && key in FIELD_LABEL ? key : null;
+}
 
 function validHttpUrl(value: string) {
   try {
@@ -383,39 +458,80 @@ function validHttpUrl(value: string) {
   }
 }
 
+/** Applies a new value for a field. Returns the message to show the admin. */
+async function applyFieldValue(field: EditableField, value: string): Promise<string> {
+  if (field === "add_admin" || field === "remove_admin") {
+    const id = Number(value.replace(/\D/g, ""));
+    if (!id || String(id).length < 5) return "⚠️ ابعت ID تليجرام صحيح (أرقام فقط).";
+    if (field === "add_admin") {
+      await addAdmin(id);
+      return `✅ تمت إضافة الأدمن <code>${id}</code>.`;
+    }
+    if (id === OWNER_TELEGRAM_ID) return "⚠️ لا يمكن حذف المالك.";
+    await removeAdmin(id);
+    return `✅ تم حذف الأدمن <code>${id}</code>.`;
+  }
+  if (field === "promo_code") {
+    if (!value || value.length > 32) return "⚠️ البروموكود مطلوب وبحد أقصى 32 حرفًا.";
+    await updateBotSettings({ promo_code: value });
+    return "✅ تم تغيير البروموكود.";
+  }
+  if (!validHttpUrl(value)) return "⚠️ ابعت رابط كامل يبدأ بـ https://";
+  await updateBotSettings({ [field]: value } as any);
+  return "✅ تم حفظ الرابط بنجاح.";
+}
+
+const COMMAND_FIELDS: Record<string, EditableField> = {
+  "/set_channel": "channel_url",
+  "/set_support": "support_url",
+  "/set_platform1": "platform_1_url",
+  "/set_platform2": "platform_2_url",
+  "/set_platform3": "platform_3_url",
+  "/set_platform4": "platform_4_url",
+  "/set_app": "app_base_url",
+  "/set_promo": "promo_code",
+  "/add_admin": "add_admin",
+  "/remove_admin": "remove_admin",
+};
+
+const ADMIN_HELP =
+  `⚙️ <b>أوامر التحكم</b>\n${RULE}\n` +
+  Object.keys(COMMAND_FIELDS)
+    .map((c) => `<code>${c} &lt;القيمة&gt;</code>`)
+    .join("\n") +
+  `\n<code>/admins</code> — عرض الأدمن\n<code>/bot_on</code> · <code>/bot_off</code>\n\nكل تعديل يُحفظ فورًا ويظهر للمستخدمين.`;
+
 async function handleAdminCommand(chatId: number, text: string) {
   const space = text.indexOf(" ");
   const command = (space === -1 ? text : text.slice(0, space)).split("@")[0] ?? "";
   const value = space === -1 ? "" : text.slice(space + 1).trim();
-  const urlFields: Record<string, keyof Pick<NonNullable<Parameters<typeof updateBotSettings>[0]>, "channel_url" | "support_url" | "platform_1_url" | "platform_2_url" | "app_base_url">> = {
-    "/set_channel": "channel_url",
-    "/set_support": "support_url",
-    "/set_platform1": "platform_1_url",
-    "/set_platform2": "platform_2_url",
-    "/set_app": "app_base_url",
-  };
-  const field = urlFields[command];
-  if (field) {
-    if (!validHttpUrl(value)) {
-      await sendMessage(chatId, "⚠️ ابعت رابط كامل يبدأ بـ https://");
-      return true;
-    }
-    await updateBotSettings({ [field]: value });
-    await sendMessage(chatId, "✅ تم حفظ الرابط بنجاح.");
-    await sendAdminPanel(chatId, await getBotSettings());
+
+  if (command === "/help" || command === "/commands") {
+    await sendMessage(chatId, ADMIN_HELP, undefined, true);
     return true;
   }
-  if (command === "/set_promo") {
-    if (!value || value.length > 32) {
-      await sendMessage(chatId, "⚠️ البروموكود مطلوب وبحد أقصى 32 حرفًا.");
-      return true;
-    }
-    await updateBotSettings({ promo_code: value });
-    await sendMessage(chatId, "✅ تم تغيير البروموكود.");
-    await sendAdminPanel(chatId, await getBotSettings());
+  if (command === "/admins") {
+    const admins = await listAdmins();
+    await sendMessage(
+      chatId,
+      `👥 <b>الأدمن</b>\n${SOFT}\n` +
+        admins.map((a) => `<code>${a.id}</code>${a.label ? ` — ${escape(a.label)}` : ""}`).join("\n"),
+      undefined,
+      true,
+    );
     return true;
   }
-  return false;
+
+  const field = COMMAND_FIELDS[command];
+  if (!field) return false;
+  if (!value) {
+    await askForValue(chatId, field);
+    return true;
+  }
+  const result = await applyFieldValue(field, value);
+  await sendMessage(chatId, result, undefined, true);
+  await sendAdminPanel(chatId, await getBotSettings());
+  return true;
 }
 
 /** Resolve @channel from a t.me URL. */
