@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      telegram_admins: {
+        Row: {
+          added_at: string
+          label: string | null
+          telegram_id: number
+        }
+        Insert: {
+          added_at?: string
+          label?: string | null
+          telegram_id: number
+        }
+        Update: {
+          added_at?: string
+          label?: string | null
+          telegram_id?: number
+        }
+        Relationships: []
+      }
       telegram_bot_settings: {
         Row: {
           app_base_url: string | null
