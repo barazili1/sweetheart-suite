@@ -141,8 +141,11 @@ const sendPhoto = async (
 
 
 
-const answerCallback = (id: string, text?: string) =>
-  call("answerCallbackQuery", { callback_query_id: id, ...(text ? { text } : {}) });
+const answerCallback = (id: string, text?: string, alert = false) =>
+  call("answerCallbackQuery", {
+    callback_query_id: id,
+    ...(text ? { text, show_alert: alert } : {}),
+  });
 
 /* --------------------------------- design -------------------------------- */
 
