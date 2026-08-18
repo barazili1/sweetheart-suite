@@ -239,33 +239,63 @@ const T = {
 
 /* --------------------------------- flows --------------------------------- */
 
+/** All activation conditions, in ONE elegant message. */
+function termsCaption(lang: Lang, platform: string, promo: string) {
+  const code = escape(promo);
+  if (lang === "en") {
+    return (
+      `╔═══════ ⟡ ═══════╗\n` +
+      `   👑 <b>${BOT_NAME} — ACTIVATION</b>\n` +
+      `╚═══════ ⟡ ═══════╝\n` +
+      `${bar(5)}  <b>5 STEPS</b>\n` +
+      `${RULE}\n` +
+      `<b>1️⃣ DOWNLOAD</b>\n     📲 Install <b>${escape(platform)}</b> (button below)\n\n` +
+      `<b>2️⃣ CHANNEL</b>\n     📢 Join our official Telegram channel\n\n` +
+      `<b>3️⃣ PROMO CODE</b>\n     🎁 Register a <b>new</b> account with\n     <code>${code}</code>  <i>(tap to copy)</i>\n\n` +
+      `<b>4️⃣ DEPOSIT</b>\n     💰 Minimum <b>300 EGP</b> or <b>6 USD</b>\n\n` +
+      `<b>5️⃣ YOUR ID</b>\n     🆔 Send your account ID here (10–14 digits)\n` +
+      `${RULE}\n` +
+      `⚠️ <i>Complete every step in order, then tap Verify.</i>`
+    );
+  }
+  return (
+    `╔═══════ ⟡ ═══════╗\n` +
+    `   👑 <b>${BOT_NAME} — شروط التفعيل</b>\n` +
+    `╚═══════ ⟡ ═══════╝\n` +
+    `${bar(5)}  <b>٥ خطوات</b>\n` +
+    `${RULE}\n` +
+    `<b>1️⃣ التحميل</b>\n     📲 حمّل تطبيق <b>${escape(platform)}</b> من الزر بالأسفل\n\n` +
+    `<b>2️⃣ القناة</b>\n     📢 اشترك في قناة التليجرام الرسمية\n\n` +
+    `<b>3️⃣ البروموكود</b>\n     🎁 سجّل حساب <b>جديد</b> بالكود\n     <code>${code}</code>  <i>(اضغط للنسخ)</i>\n\n` +
+    `<b>4️⃣ الإيداع</b>\n     💰 الحد الأدنى <b>٣٠٠ جنيه</b> أو <b>٦ دولار</b>\n\n` +
+    `<b>5️⃣ الـ ID</b>\n     🆔 ابعت ID حسابك هنا (من ١٠ لـ ١٤ رقم)\n` +
+    `${RULE}\n` +
+    `⚠️ <i>نفّذ كل الخطوات بالترتيب ثم اضغط «التحقق الآن».</i>`
+  );
+}
+
 async function sendSteps(chatId: number, lang: Lang, pk: PlatformKey, settings: BotSettings) {
   const t = T[lang];
   const p = PLATFORMS[pk];
   const localized = copy(lang, settings.promoCode);
   const downloadUrl = pk === "p1" ? settings.platform1Url : settings.platform2Url;
-  const img = images();
-  await sendPhoto(chatId, img.steps, t.step1(p.name), [
+  await sendPhoto(chatId, "steps", termsCaption(lang, p.name, settings.promoCode), [
     [{ text: t.dl(p.name), url: downloadUrl }],
-  ]);
-  await sendPhoto(chatId, img.steps, t.step2, [[{ text: t.join, url: settings.channelUrl }]]);
-  await sendPhoto(chatId, img.steps, localized.step3, [
+    [{ text: t.join, url: settings.channelUrl }],
     [{ text: localized.copy, callback_data: `copy:${lang}` }],
-  ]);
-  await sendPhoto(chatId, img.steps, t.step4);
-  await sendPhoto(chatId, img.steps, t.step5, [
     [{ text: t.verify, callback_data: `verify:${lang}` }],
   ]);
 }
 
 async function sendVerified(chatId: number, lang: Lang, settings: BotSettings, id?: string, name?: string) {
   const t = T[lang];
-  await sendPhoto(chatId, images().verified, t.verified, [
+  await sendPhoto(chatId, "verified", t.verified, [
     [{ text: t.open, url: appUrl(lang, id, name, settings.appBaseUrl) }],
     [{ text: t.support, url: settings.supportUrl }],
     [{ text: t.channel, url: settings.channelUrl }],
   ]);
 }
+
 
 function isAdmin(fromId: unknown) {
   return Number(fromId) === ADMIN_TELEGRAM_ID;
