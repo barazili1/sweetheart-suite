@@ -89,11 +89,11 @@ function bar(step: number, total = 5) {
 
 function card(step: number, label: string, body: string) {
   return (
-    `${TOP}\n` +
-    `   <b>${label}</b>\n` +
-    `${BOT_}\n` +
-    `${bar(step)}  <b>${step}/5</b>\n` +
-    `${RULE}\n` +
+    `┏━━━━━━━━━━━━━━━━━━┓\n` +
+    `┃  <b>${label}</b>\n` +
+    `┗━━━━━━━━━━━━━━━━━━┛\n\n` +
+    `${bar(step)}  <b>الخطوة ${step} من 5</b>\n` +
+    `${RULE}\n\n` +
     `${body}`
   );
 }
@@ -175,24 +175,24 @@ const T = {
       card(
         1,
         "التحميل",
-        `📲 <b>تحميل منصة ${p}</b>\n\n• استخدم التطبيق الرسمي فقط\n• خليه مثبّت لاستقبال الإشارات\n\n<i>اضغط الزر بالأسفل.</i>`,
+        `📲 <b>حمّل تطبيق ${p}</b>\n\n✅ استخدم التطبيق الرسمي فقط\n✅ احتفظ به على هاتفك لاستقبال الإشارات\n\n👇 <i>اضغط زر التحميل بالأسفل</i>`,
       ),
     dl: (p: string) => `⬇️ تحميل ${p}`,
     step2: card(
       2,
       "قناة التلجرام",
-      `📢 <b>الانضمام لقناة التلجرام</b>\n\n• كل إشارات VIP تُنشر هناك\n• متفوّتش أي تحديث\n\n<i>يتم التأكد من الانضمام عند التحقق.</i>`,
+      `📢 <b>انضم لقناة التلجرام الرسمية</b>\n\n✅ إشارات VIP تُنشر داخل القناة\n✅ تابع كل التحديثات أولًا بأول\n\n⚠️ <i>سيتم التأكد من اشتراكك عند التحقق</i>`,
     ),
     join: "🔔 انضم للقناة",
     step4: card(
       4,
       "الإيداع",
-      `💰 <b>إيداع مبلغ في حسابك</b>\n\n• الحد الأدنى <b>300 جنيه مصري</b>\n• أو <b>6 دولار أمريكي</b>\n\n<i>مطلوب لفتح إشارات VIP.</i>`,
+      `💰 <b>قم بتمويل حسابك</b>\n\n💵 الحد الأدنى: <b>300 جنيه مصري</b>\n💵 أو: <b>6 دولار أمريكي</b>\n\n🔐 <i>الإيداع مطلوب لتفعيل إشارات VIP</i>`,
     ),
     step5: card(
       5,
       "الـ ID",
-      `🆔 <b>أرسل ID حسابك في المنصة</b>\n\n• أرقام فقط\n• من <b>10</b> إلى <b>14</b> رقم\n\n<i>مثال: 1234567890</i>`,
+      `🆔 <b>أرسل ID حسابك في المنصة</b>\n\n✅ أرقام فقط بدون حروف أو رموز\n✅ من <b>10</b> إلى <b>14</b> رقم\n\n📝 <i>مثال: 1234567890</i>`,
     ),
     badId: `⚠️ <b>ID غير صحيح</b>\n${RULE}\nأرسل <b>أرقام فقط</b> من <b>10</b> إلى <b>14</b> رقم.`,
     idOk: (id: string) =>
@@ -218,12 +218,12 @@ async function sendSteps(chatId: number, lang: Lang, pk: PlatformKey, settings: 
   await sendPhoto(chatId, img.steps, t.step1(p.name), [
     [{ text: t.dl(p.name), url: downloadUrl }],
   ]);
-  await sendMessage(chatId, t.step2, [[{ text: t.join, url: settings.channelUrl }]]);
-  await sendMessage(chatId, localized.step3, [
+  await sendPhoto(chatId, img.steps, t.step2, [[{ text: t.join, url: settings.channelUrl }]]);
+  await sendPhoto(chatId, img.steps, localized.step3, [
     [{ text: localized.copy, callback_data: `copy:${lang}` }],
   ]);
-  await sendMessage(chatId, t.step4);
-  await sendMessage(chatId, t.step5, [
+  await sendPhoto(chatId, img.steps, t.step4);
+  await sendPhoto(chatId, img.steps, t.step5, [
     [{ text: t.verify, callback_data: `verify:${lang}` }],
   ]);
 }
