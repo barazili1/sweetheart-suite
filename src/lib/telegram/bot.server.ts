@@ -488,14 +488,21 @@ export async function handleUpdate(update: any) {
     if (action === "lang") {
       await answerCallback(cb.id);
       await clearFlow(chatId);
-      await sendPhoto(chatId, "steps", T[lang].platform, [
-        [{ text: `🎯 ${PLATFORMS.p1.name}`, callback_data: `plat:${lang}:p1` }],
-        [{ text: `🎯 ${PLATFORMS.p2.name}`, callback_data: `plat:${lang}:p2` }],
+      await sendPhoto(chatId, "platforms", T[lang].platform, [
+        [
+          { text: `${PLATFORMS.p1.emoji} ${PLATFORMS.p1.name}`, callback_data: `plat:${lang}:p1` },
+          { text: `${PLATFORMS.p2.emoji} ${PLATFORMS.p2.name}`, callback_data: `plat:${lang}:p2` },
+        ],
+        [
+          { text: `${PLATFORMS.p3.emoji} ${PLATFORMS.p3.name}`, callback_data: `plat:${lang}:p3` },
+          { text: `${PLATFORMS.p4.emoji} ${PLATFORMS.p4.name}`, callback_data: `plat:${lang}:p4` },
+        ],
       ]);
       return;
     }
     if (action === "plat") {
-      const pk = (parts[2] === "p2" ? "p2" : "p1") as PlatformKey;
+      const raw = parts[2] ?? "p1";
+      const pk = (raw in PLATFORMS ? raw : "p1") as PlatformKey;
       await answerCallback(cb.id);
       await clearFlow(chatId);
       await sendSteps(chatId, lang, pk, settings);
